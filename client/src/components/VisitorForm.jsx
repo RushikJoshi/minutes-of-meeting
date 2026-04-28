@@ -1,29 +1,40 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import API from "../api/api";
+
+import React, { useState, useEffect } from "react";
+import axios from "../api/api";
 import { toast } from "react-hot-toast";
 
+
 const VisitorForm = ({ onSuccess }) => {
+  const [meetings, setMeetings] = useState([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(true);
+  const [meetingsError, setMeetingsError] = useState(false);
+  const [selectedMeetingId, setSelectedMeetingId] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState(null);
 
-  const { data: meetings = [] } = useQuery({
-    queryKey: ["public-meetings"],
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      setMeetingsLoading(true);
+      setMeetingsError(false);
       try {
-        return (await API.get("/visitors/public/meetings")).data;
-      } catch {
-        return [];
+        const res = await axios.get("/api/meetings");
+        setMeetings(res.data);
+      } catch (err) {
+        setMeetingsError(true);
+        console.error("Failed to fetch meetings", err);
+      } finally {
+        setMeetingsLoading(false);
       }
-    },
-  });
+    };
+    fetchMeetings();
+  }, []);
 
   const verifyAadhar = async (num) => {
     if (num.length !== 12) return;
     setIsVerifying(true);
     setVerificationStatus(null);
     try {
-      const res = await API.post("/api/visitors/verify-aadhar/public", { aadharNumber: num });
+      const res = await axios.post("/api/visitors/verify-aadhar/public", { aadharNumber: num });
       if (res.data.status === "verified") {
         setVerificationStatus("verified");
         toast.success(`Aadhar Verified: ${res.data.name}`);
@@ -39,23 +50,17 @@ const VisitorForm = ({ onSuccess }) => {
     }
   };
 
-  const createVisitor = useMutation({
-    mutationFn: async (formData) => {
-      return (await API.post("/api/visitors/public", Object.fromEntries(formData))).data;
-    },
-    onSuccess: () => {
-      toast.success("Check-in successful! Please wait for your host.");
-      if (onSuccess) onSuccess();
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.error || "Check-in failed");
-    },
-  });
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    createVisitor.mutate(formData);
+    formData.set("meetingId", selectedMeetingId);
+    try {
+      await axios.post("/api/visitors/public", Object.fromEntries(formData));
+      toast.success("Check-in successful! Please wait for your host.");
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Check-in failed");
+    }
   };
 
   return (
@@ -84,9 +89,25 @@ const VisitorForm = ({ onSuccess }) => {
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-700">Meeting</label>
-          <select name="meetingId" className="input-field appearance-none">
+          <select
+            name="meetingId"
+            className="input-field appearance-none"
+            value={selectedMeetingId}
+            onChange={e => setSelectedMeetingId(e.target.value)}
+            required
+          >
             <option value="">Select Meeting</option>
-            {meetings.map(m => <option key={m._id} value={m._id}>{m.title}</option>)}
+            {meetingsLoading && <option disabled>Loading meetings...</option>}
+            {meetingsError && <option disabled>Error loading meetings</option>}
+            {!meetingsLoading && !meetingsError && meetings.length === 0 && (
+              <option disabled>No meetings available</option>
+            )}
+            {!meetingsLoading && !meetingsError && meetings.map(m => (
+              <option key={m._id} value={m._id}>
+                {m.title}{m.startTime ? ` (${new Date(m.startTime).toLocaleString()})` : ""}
+              </option>
+            ))}
+            <option value="walkin">Walk-in (No Meeting)</option>
           </select>
         </div>
       </div>
@@ -103,7 +124,7 @@ const VisitorForm = ({ onSuccess }) => {
             <input
               name="documentNumber"
               placeholder="ID Number (12 digits for Aadhar)"
-              onChange={(e) => e.target.value.length === 12 && verifyAadhar(e.target.value)}
+              onChange={e => e.target.value.length === 12 && verifyAadhar(e.target.value)}
               className="input-field py-2 text-sm"
             />
             {isVerifying && (
@@ -121,10 +142,9 @@ const VisitorForm = ({ onSuccess }) => {
 
       <button
         type="submit"
-        disabled={createVisitor.isPending}
         className="btn-primary w-full"
       >
-        {createVisitor.isPending ? "Processing..." : "Complete Check-In"}
+        Complete Check-In
       </button>
     </form>
   );

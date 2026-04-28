@@ -59,4 +59,17 @@ router.get("/reminders", requireAuth, requireWorkspace, getTodayMeetings);
 router.get("/upcoming", requireAuth, requireWorkspace, getTodayMeetings);
 router.get("/meetings/upcoming", requireAuth, requireWorkspace, getTodayMeetings);
 
+// GET /api/meetings
+router.get("/", async (req, res) => {
+  try {
+    const meetings = await Meeting.find({ startTime: { $gte: new Date() } })
+      .sort({ startTime: 1 })
+      .select("_id title startTime");
+    res.status(200).json(meetings);
+  } catch (error) {
+    console.error("Error fetching meetings:", error);
+    res.status(500).json({ error: "Failed to fetch meetings" });
+  }
+});
+
 module.exports = router;

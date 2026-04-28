@@ -70,6 +70,9 @@ app.use(editorTemplateRoutes);
 // ✅ IMPORTANT: Visitor API Route
 app.use("/api/visitors", visitorRoutes);
 
+// Add meeting routes
+app.use("/api/meetings", meetingRoutes);
+
 /* ===========================
    Static Uploads
 =========================== */
