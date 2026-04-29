@@ -21,20 +21,12 @@ class EmailService {
       if (service) {
         this._transporter = nodemailer.createTransport({
           service,
-          auth: {
-            user,
-            pass,
-          },
+          auth: { user, pass },
         });
       } else if (host) {
         this._transporter = nodemailer.createTransport({
-          host,
-          port,
-          secure,
-          auth: {
-            user,
-            pass,
-          },
+          host, port, secure,
+          auth: { user, pass },
         });
       }
     }
@@ -42,280 +34,123 @@ class EmailService {
   }
 
   isConfigured() {
-    return !!(
-      this.getEnv("EMAIL_USER", "SMTP_USER") &&
-      this.getEnv("EMAIL_PASS", "SMTP_PASS") &&
-      (this.getEnv("EMAIL_SERVICE") || this.getEnv("EMAIL_HOST", "SMTP_HOST"))
-    );
-  }
-
-  formatDate(date, timezone) {
-    if (!date) return "To be announced";
-    return new Intl.DateTimeFormat("en-IN", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: timezone || "Asia/Kolkata",
-    }).format(new Date(date));
+    return !!(this.getEnv("EMAIL_USER", "SMTP_USER") && this.getEnv("EMAIL_PASS", "SMTP_PASS"));
   }
 
   escapeHtml(value) {
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  buildInviteHtml({ meeting, recipientName, joinLink, meetLink }) {
-    const safeTitle = this.escapeHtml(meeting.title || "Meeting Invitation");
-    const safeAgenda = this.escapeHtml(meeting.agenda || meeting.description || "Agenda will be shared shortly.");
-    const safeDate = this.escapeHtml(this.formatDate(meeting.date, meeting.timezone));
-    const safeTime = this.escapeHtml(
-      `${meeting.startTime || "TBD"} - ${meeting.endTime || "TBD"} (${meeting.timezone || "Asia/Kolkata"})`
-    );
-    const safeLocation = this.escapeHtml(
-      meeting.type === "offline" ? meeting.location || "Location will be shared soon" : meeting.platform || "Online"
-    );
-    const greeting = this.escapeHtml(recipientName || "there");
+  // 1. Send Request to Host (Approve/Reject)
+  async sendApprovalRequestToHost(visitor) {
+    if (!this.isConfigured()) return;
+    const transporter = this.getTransporter();
+    const baseUrl = "http://10.125.183.132:5000"; // Backend URL (Port 5000)
 
-    return `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meeting Invitation</title>
-  </head>
-  <body style="margin:0;padding:24px;background:#f8fafc;font-family:Segoe UI,Arial,sans-serif;color:#0f172a;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
-      <tr>
-        <td style="padding:36px 40px;background:linear-gradient(135deg,#0f172a,#1d4ed8);">
-          <div style="display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.14);color:#dbeafe;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-            MOM Meeting Invite
+    const html = `
+      <div style="font-family:sans-serif; background:#f1f5f9; padding:40px;">
+        <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+          <div style="padding:30px; background:#0f172a; color:#fff; text-align:center;">
+            <h2>New Visitor Arrival</h2>
+            <p>Please review and approve this meeting request.</p>
           </div>
-          <h1 style="margin:18px 0 10px;font-size:30px;line-height:1.2;color:#ffffff;">${safeTitle}</h1>
-          <p style="margin:0;color:#bfdbfe;font-size:15px;line-height:1.7;">
-            Hello ${greeting}, you have been invited to join a meeting on MOM. Your personal invite link is ready below.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:32px 40px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0 12px;">
-            <tr>
-              <td style="padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
-                <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Date</div>
-                <div style="margin-top:6px;font-size:15px;font-weight:600;color:#0f172a;">${safeDate}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
-                <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Time</div>
-                <div style="margin-top:6px;font-size:15px;font-weight:600;color:#0f172a;">${safeTime}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
-                <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Location</div>
-                <div style="margin-top:6px;font-size:15px;font-weight:600;color:#0f172a;">${safeLocation}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
-                <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Agenda</div>
-                <div style="margin-top:6px;font-size:14px;line-height:1.7;color:#334155;">${safeAgenda}</div>
-              </td>
-            </tr>
-          </table>
-
-          <div style="margin-top:28px;">
-            <a href="${joinLink}" style="display:inline-block;padding:14px 24px;border-radius:14px;background:#1d4ed8;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">
-              Accept Invite
-            </a>
-            ${
-              meetLink
-                ? `<a href="${meetLink}" style="display:inline-block;margin-left:12px;padding:14px 24px;border-radius:14px;background:#eff6ff;color:#1d4ed8;text-decoration:none;font-size:15px;font-weight:700;border:1px solid #bfdbfe;">Open Meeting Link</a>`
-                : ""
-            }
-          </div>
-
-          <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#64748b;">
-            If the primary button does not work, copy this secure invite link into your browser:
-          </p>
-          <p style="margin:8px 0 0;font-size:13px;line-height:1.7;word-break:break-all;color:#1d4ed8;">
-            ${this.escapeHtml(joinLink)}
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:20px 40px;background:#f8fafc;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;line-height:1.7;">
-          This invitation was sent from MOM. A calendar invite is attached for easy scheduling.
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-  }
-
-  buildIcsContent(meeting) {
-    const uid = `${meeting._id}@momsystem`;
-    const now = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
-    const start = meeting.date ? new Date(meeting.date) : new Date();
-    const end = new Date(start);
-
-    if (meeting.startTime) {
-      const [startHour, startMinute] = String(meeting.startTime).split(":").map(Number);
-      start.setHours(startHour || 0, startMinute || 0, 0, 0);
-    }
-
-    if (meeting.endTime) {
-      const [endHour, endMinute] = String(meeting.endTime).split(":").map(Number);
-      end.setHours(endHour || 0, endMinute || 0, 0, 0);
-    } else {
-      end.setHours(start.getHours() + 1, start.getMinutes(), 0, 0);
-    }
-
-    const dtStart = start.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
-    const dtEnd = end.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
-
-    return [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//MOM System//EN",
-      "METHOD:REQUEST",
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${now}`,
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
-      `SUMMARY:${meeting.title || "Meeting"}`,
-      `DESCRIPTION:${(meeting.agenda || meeting.description || "").replace(/\n/g, "\\n")}`,
-      `LOCATION:${meeting.location || meeting.meetingLink || "Online"}`,
-      "STATUS:CONFIRMED",
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].join("\r\n");
-  }
-
-  buildReminderHtml({ meeting, minutesBefore }) {
-    const safeTitle = this.escapeHtml(meeting.title || "Upcoming meeting");
-    const safeAgenda = this.escapeHtml(meeting.agenda || "Agenda will be shared shortly.");
-    const safeDate = this.escapeHtml(this.formatDate(meeting.date, meeting.timezone));
-    const safeTime = this.escapeHtml(
-      `${meeting.startTime || "TBD"} - ${meeting.endTime || "TBD"} (${meeting.timezone || "Asia/Kolkata"})`
-    );
-    const safeMinutes = this.escapeHtml(String(minutesBefore || 0));
-    const safeLocation = this.escapeHtml(meeting.location || meeting.meetingLink || meeting.link || "Online");
-
-    return `
-      <div style="font-family:Segoe UI,Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a;">
-        <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;">
-          <div style="padding:28px 32px;background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;">
-            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#bfdbfe;">Meeting Reminder</div>
-            <h1 style="margin:12px 0 6px;font-size:28px;">${safeTitle}</h1>
-            <p style="margin:0;color:#dbeafe;">This meeting starts in ${safeMinutes} minute(s).</p>
-          </div>
-          <div style="padding:28px 32px;">
-            <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#334155;">Please review the agenda and be ready to join on time.</p>
-            <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px;"><strong>Date:</strong> ${safeDate}</div>
-            <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px;"><strong>Time:</strong> ${safeTime}</div>
-            <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px;"><strong>Location:</strong> ${safeLocation}</div>
-            <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;"><strong>Agenda:</strong><br />${safeAgenda}</div>
+          <div style="padding:30px; text-align:center;">
+            ${visitor.photoUrl ? `<img src="${visitor.photoUrl}" style="width:120px; height:120px; border-radius:60px; object-fit:cover; margin-bottom:20px; border:4px solid #f1f5f9;" />` : ''}
+            <table style="width:100%; text-align:left; border-collapse:collapse; margin-bottom:30px;">
+              <tr><td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Visitor Name:</strong></td><td style="padding:10px; border-bottom:1px solid #f1f5f9;">${this.escapeHtml(visitor.name)}</td></tr>
+              <tr><td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Mobile:</strong></td><td style="padding:10px; border-bottom:1px solid #f1f5f9;">${this.escapeHtml(visitor.mobile)}</td></tr>
+              <tr><td style="padding:10px; border-bottom:1px solid #f1f5f9;"><strong>Purpose:</strong></td><td style="padding:10px; border-bottom:1px solid #f1f5f9;">${this.escapeHtml(visitor.purpose)}</td></tr>
+            </table>
+            
+            <div style="display:flex; justify-content:center; gap:20px;">
+              <a href="${baseUrl}/api/visitors/action/approve/${visitor._id}" style="padding:14px 30px; background:#10b981; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold; margin-right:10px; display:inline-block;">APPROVE MEETING</a>
+              <a href="${baseUrl}/api/visitors/action/reject/${visitor._id}" style="padding:14px 30px; background:#ef4444; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold; display:inline-block;">REJECT</a>
+            </div>
           </div>
         </div>
       </div>
     `;
+
+    await transporter.sendMail({
+      from: `"Visitor System" <${this.getEnv("EMAIL_USER")}>`,
+      to: visitor.meetingWithEmail,
+      subject: `Visitor Action Required: ${visitor.name}`,
+      html,
+    });
+    console.log(`✅ Approval request sent to host: ${visitor.meetingWithEmail}`);
   }
 
-  async sendMeetingInvitation({ meeting, recipients }) {
-    if (!this.isConfigured()) {
-      console.warn("Email not configured (EMAIL_USER / EMAIL_PASS missing). Skipping invitations.");
-      return { sent: 0, failed: recipients.map((recipient) => ({ email: recipient.email, reason: "email-not-configured" })) };
-    }
-
+  // 2. Send Pending Email to Visitor (Form Submitted Successfully)
+  async sendPendingNotificationToVisitor(visitor) {
+    if (!this.isConfigured()) return;
     const transporter = this.getTransporter();
-    const icsContent = this.buildIcsContent(meeting);
-    const meetLink = meeting.meetingLink || meeting.link || "";
+    const html = `
+      <div style="font-family:sans-serif; background:#f8fafc; padding:40px;">
+        <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; padding:40px; text-align:center; border:1px solid #e2e8f0;">
+          <div style="font-size:48px; margin-bottom:20px;">✅</div>
+          <h2 style="color:#0f172a; margin-bottom:10px;">Form Submitted Successfully!</h2>
+          <p style="color:#64748b; font-size:16px; line-height:1.6;">
+            Hello <strong>${this.escapeHtml(visitor.name)}</strong>,<br><br>
+            Your visit request for <strong>${this.escapeHtml(visitor.meetingWithName)}</strong> has been recorded.
+          </p>
+          <div style="margin-top:20px; padding:15px; background:#fff9db; border-radius:8px; color:#856404; font-size:14px; font-weight:600;">
+            Status: PENDING HOST APPROVAL
+          </div>
+          <p style="color:#64748b; margin-top:20px; font-size:14px;">
+            We will notify you immediately once your meeting is approved.
+          </p>
+        </div>
+      </div>
+    `;
 
-    const sendOne = async (recipient) => {
-      const html = this.buildInviteHtml({
-        meeting,
-        recipientName: recipient.name || recipient.email,
-        joinLink: recipient.joinLink,
-        meetLink,
-      });
-
-      await transporter.sendMail({
-        from: `"MOM System" <${this.getEnv("EMAIL_USER", "SMTP_USER")}>`,
-        to: recipient.email,
-        subject: `Meeting Invitation: ${meeting.title}`,
-        html,
-        attachments: [
-          {
-            filename: "invite.ics",
-            content: icsContent,
-            contentType: "text/calendar; method=REQUEST",
-          },
-        ],
-      });
-    };
-
-    const results = await Promise.allSettled(recipients.map(sendOne));
-    const failed = results
-      .map((result, index) =>
-        result.status === "rejected"
-          ? { email: recipients[index].email, reason: result.reason?.message || "Failed to send invite" }
-          : null
-      )
-      .filter(Boolean);
-
-    return {
-      sent: recipients.length - failed.length,
-      failed,
-    };
+    await transporter.sendMail({
+      from: `"GT MOM Visitor" <${this.getEnv("EMAIL_USER")}>`,
+      to: visitor.email,
+      subject: `Form Submitted Successfully - Visitor Request Recorded`,
+      html,
+    });
+    console.log(`✅ Pending notification sent to visitor: ${visitor.email}`);
   }
 
-  async sendMeetingReminder({ meeting, recipients, minutesBefore }) {
-    if (!this.isConfigured()) {
-      return { sent: 0, failed: recipients.map((email) => ({ email, reason: "email-not-configured" })) };
-    }
-
+  // 3. Send Final Result to Visitor (Approved/Rejected)
+  async sendFinalResultToVisitor(visitor) {
+    if (!this.isConfigured()) return;
     const transporter = this.getTransporter();
-    const html = this.buildReminderHtml({ meeting, minutesBefore });
-    const results = await Promise.allSettled(
-      recipients.map((email) =>
-        transporter.sendMail({
-          from: `"MOM System" <${this.getEnv("EMAIL_USER", "SMTP_USER")}>`,
-          to: email,
-          subject: `Reminder: ${meeting.title} starts in ${minutesBefore} minute(s)`,
-          html,
-        })
-      )
-    );
+    const isApproved = visitor.status === "APPROVED";
+    
+    const html = `
+      <div style="font-family:sans-serif; background:#f8fafc; padding:40px;">
+        <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; padding:40px; text-align:center; border:1px solid #e2e8f0;">
+          <h2 style="color:${isApproved ? '#10b981' : '#ef4444'}; margin-bottom:15px;">
+            ${isApproved ? 'Meeting Approved!' : 'Meeting Request Rejected'}
+          </h2>
+          <p style="color:#0f172a; font-size:16px; font-weight:600;">
+            Hello ${this.escapeHtml(visitor.name)},
+          </p>
+          <p style="color:#64748b; font-size:16px; line-height:1.6;">
+            ${isApproved 
+              ? `Great news! <strong>${this.escapeHtml(visitor.meetingWithName)}</strong> has approved your meeting request.`
+              : `Unfortunately, your request to meet <strong>${this.escapeHtml(visitor.meetingWithName)}</strong> could not be approved at this time.`}
+          </p>
 
-    const failed = results
-      .map((result, index) =>
-        result.status === "rejected" ? { email: recipients[index], reason: result.reason?.message || "Failed to send reminder" } : null
-      )
-      .filter(Boolean);
+          ${isApproved ? `
+            <div style="margin-top:30px; padding:24px; background:#f0fdf4; border:2px dashed #10b981; border-radius:16px;">
+              <p style="color:#065f46; font-weight:bold; margin-bottom:15px;">YOUR ENTRY PASS QR CODE</p>
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${visitor._id}" style="width:200px; height:200px; border-radius:12px; background:#fff; padding:10px;" alt="Entry QR" />
+              <p style="color:#64748b; font-size:12px; margin-top:15px;">Please show this QR code at the reception when you arrive.</p>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
 
-    return {
-      sent: recipients.length - failed.length,
-      failed,
-    };
-  }
-
-  async verifyConnection() {
-    if (!this.isConfigured()) {
-      return { ok: false, reason: "SMTP/email env vars are missing" };
-    }
-
-    const transporter = this.getTransporter();
-    await transporter.verify();
-    return { ok: true };
+    await transporter.sendMail({
+      from: `"GT MOM Visitor" <${this.getEnv("EMAIL_USER")}>`,
+      to: visitor.email,
+      subject: isApproved ? `Meeting Approved by ${visitor.meetingWithName}` : `Meeting Update`,
+      html,
+    });
+    console.log(`✅ Final status (${visitor.status}) sent to visitor: ${visitor.email}`);
   }
 }
 

@@ -16,6 +16,14 @@ import ActionItems from "./pages/ActionItems";
 import MinutesEditor from "./pages/MinutesEditor";
 import TemplateBuilder from "./pages/TemplateBuilder";
 import JoinMeeting from "./pages/JoinMeeting";
+import VisitorPage from "./pages/VisitorPage";
+import RoleSelection from "./pages/RoleSelection";
+import DocumentVerification from "./pages/DocumentVerification";
+import AdminDashboard from "./pages/AdminDashboard";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
+import VisitorDashboard from "./pages/VisitorDashboard";
+import VisitorFormPublic from "./pages/VisitorFormPublic";
+import ReceptionistDashboard from "./pages/ReceptionistDashboard";
 import { useEffect, useState } from "react";
 import API from "./api/api";
 import { useAuth } from "./hooks/useAuth";
@@ -110,15 +118,24 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        <Route path="/v/:name/:token" element={<VisitorFormPublic />} />
+        <Route path="/visitor-form/*" element={<VisitorFormPublic />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/role-selection" element={<RoleSelection />} />
+        <Route path="/document-verification" element={<DocumentVerification />} />
         <Route path="/share/:token" element={<ShareView />} />
         <Route path="/join/:id" element={<JoinMeeting />} />
+        <Route path="/visitor-dashboard" element={<VisitorDashboard />} />
+        <Route path="/receptionist-dashboard" element={<ReceptionistDashboard />} />
+        <Route path="/visitor-panel" element={<VisitorPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/meeting/:id" element={<MeetingDetails />} />

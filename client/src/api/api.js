@@ -1,7 +1,17 @@
 import axios from "axios";
 
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+  const { hostname } = window.location;
+  // If we are on an IP address (like 10.125.183.132), use that IP for the backend too
+  if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+    return `http://${hostname}:5000`;
+  }
+  return "http://localhost:5000";
+};
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+  baseURL: getBaseURL(),
 });
 
 const WS_KEY = "mom.workspaceId";

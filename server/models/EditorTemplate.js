@@ -6,7 +6,6 @@ const editorTemplateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workspace",
       required: true,
-      index: true,
     },
     title: { type: String, default: "MOM Template", trim: true },
     contentHtml: { type: String, default: "<p></p>" },

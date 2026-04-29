@@ -1,39 +1,24 @@
 const express = require("express");
-const multer = require("multer");
-const {
-  createVisitor,
-  getVisitors,
-  uploadDocument,
-  verifyAadhar,
-  verifyDocument
-} = require("../controllers/visitorController");
-const { allowRoles } = require("../middlewares/roleMiddleware");
-
 const router = express.Router();
+const visitorController = require("../controllers/visitorController");
 
-// Multer setup
-const upload = multer({ dest: "uploads/" });
-
-// Public routes (no auth needed for check-in)
-router.post("/public", createVisitor);
-router.post("/verify-aadhar/public", verifyAadhar);
-router.get("/public/meetings", async (req, res) => {
-  try {
-    const Meeting = require("../models/Meeting");
-    const meetings = await Meeting.find({ startTime: { $gte: new Date() } })
-      .limit(10)
-      .select("title _id");
-    res.json(meetings);
-  } catch (err) {
-    res.json([]);
-  }
+// Public routes
+router.post("/submit-visitor", visitorController.publicRegisterVisitor);
+router.get("/validate-token/:token", async (req, res) => {
+  const { token } = req.params;
+  const vToken = await require("../models/VisitorToken").findOne({ token });
+  if (!vToken) return res.status(404).json({ success: false, message: "Invalid token" });
+  if (vToken.isUsed) return res.json({ success: true, isUsed: true, name: vToken.name, visitorId: vToken.visitorId });
+  res.json({ success: true, isUsed: false, name: vToken.name });
 });
 
-// Authenticated routes
-router.post("/", createVisitor);
-router.get("/", getVisitors);
-router.post("/verify-aadhar", verifyAadhar);
-router.post("/:id/upload-doc", upload.single("file"), uploadDocument);
-router.put("/:id/verify", verifyDocument);
+// Host Actions from Email (Direct GET request from browser)
+router.get("/action/:action/:id", visitorController.handleHostAction);
+
+// Receptionist Routes
+router.get("/scan/:id", visitorController.scanVisitor);
+router.post("/check-in/:id", visitorController.checkInVisitor);
+router.post("/check-out/:id", visitorController.checkOutVisitor);
+router.get("/", visitorController.getVisitors);
 
 module.exports = router;

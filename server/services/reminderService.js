@@ -146,6 +146,27 @@ async function processActionItemReminders() {
   }
 }
 
+async function autoCompletePastScheduledMeetings() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0); // Start of today
+
+  // Find scheduled meetings where date is older than today
+  const meetings = await Meeting.find({
+    status: "scheduled",
+    date: { $lt: now }
+  });
+
+  for (const meeting of meetings) {
+    try {
+      meeting.status = "completed";
+      await meeting.save();
+      console.log(`[Cron] Auto-completed old scheduled meeting: ${meeting.title}`);
+    } catch (err) {
+      console.error(`[Cron] Error completing old meeting ${meeting._id}:`, err.message);
+    }
+  }
+}
+
 async function autoCompleteOngoingMeetings() {
   const now = new Date();
   
@@ -160,7 +181,7 @@ async function autoCompleteOngoingMeetings() {
   for (const meeting of meetings) {
     try {
       await internalEndMeeting(meeting._id);
-      console.log(`[Cron] Auto-completed meeting: ${meeting.title}`);
+      console.log(`[Cron] Auto-completed ongoing meeting: ${meeting.title}`);
     } catch (err) {
       console.error(`[Cron] Auto-complete error for ${meeting._id}:`, err.message);
     }
@@ -172,6 +193,7 @@ function startReminderLoop() {
     try {
       await processMeetingReminders();
       await processActionItemReminders();
+      await autoCompletePastScheduledMeetings();
       await autoCompleteOngoingMeetings();
     } catch (e) {
       // eslint-disable-next-line no-console
