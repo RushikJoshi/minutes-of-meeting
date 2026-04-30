@@ -16,7 +16,7 @@ class PdfService {
     const page = await browser.newPage();
 
     const dateStr = mom.date ? new Date(mom.date).toLocaleDateString() : (meeting.date ? new Date(meeting.date).toLocaleDateString() : "N/A");
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -304,7 +304,112 @@ class PdfService {
     `;
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({ 
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+      printBackground: true
+    });
+
+    await browser.close();
+    return pdfBuffer;
+  }
+
+  /**
+   * Generate PDF for Visitor Details
+   */
+  async generateVisitorPdf(visitor, baseUrl) {
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+
+    const displayPhotoUrl = visitor.photoUrl
+      ? (visitor.photoUrl.startsWith('data:') || visitor.photoUrl.startsWith('http')
+        ? visitor.photoUrl
+        : `${baseUrl}${visitor.photoUrl}`)
+      : null;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+          body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; background: #fff; }
+          .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+          .title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; }
+          .status { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f1f5f9; color: #475569; }
+          .content { display: grid; grid-template-columns: 180px 1fr; gap: 40px; }
+          .photo-box { width: 180px; height: 180px; border-radius: 24px; overflow: hidden; border: 4px solid #f1f5f9; }
+          .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+          .details-table { width: 100%; border-collapse: collapse; }
+          .details-table td { padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+          .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+          .value { font-size: 14px; font-weight: 600; color: #1e293b; }
+          .section-title { font-size: 14px; font-weight: 800; color: #7c3aed; margin: 30px 0 15px 0; text-transform: uppercase; letter-spacing: 0.1em; }
+          .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <p style="font-size: 10px; font-weight: 800; color: #7c3aed; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.1em;">Visitor Pass System</p>
+            <h1 class="title">Visitor Details</h1>
+          </div>
+          <div class="status">${visitor.status}</div>
+        </div>
+
+        <div class="content">
+          <div class="photo-box">
+            ${displayPhotoUrl ? `<img src="${displayPhotoUrl}" />` : `<div style="background: #f1f5f9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-size: 40px;">👤</div>`}
+          </div>
+          
+          <div>
+            <div class="section-title">Personal Information</div>
+            <table class="details-table">
+              <tr>
+                <td style="width: 50%"><div class="label">Full Name</div><div class="value">${visitor.name}</div></td>
+                <td><div class="label">Mobile Number</div><div class="value">${visitor.mobile}</div></td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="label">Email Address</div><div class="value">${visitor.email || 'N/A'}</div></td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="label">Address</div><div class="value">${visitor.address || 'N/A'}</div></td>
+              </tr>
+            </table>
+
+            <div class="section-title">Identity Document</div>
+            <table class="details-table">
+              <tr>
+                <td style="width: 50%"><div class="label">Document Type</div><div class="value">${visitor.document?.type || 'N/A'}</div></td>
+                <td><div class="label">ID Number</div><div class="value">${visitor.document?.number || 'N/A'}</div></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="section-title">Meeting Details</div>
+        <table class="details-table">
+          <tr>
+            <td style="width: 33%"><div class="label">Whom to Meet</div><div class="value">${visitor.meetingWithName}</div></td>
+            <td style="width: 33%"><div class="label">Purpose</div><div class="value">${visitor.purpose}</div></td>
+            <td><div class="label">Date & Time</div><div class="value">${visitor.meetingTime ? new Date(visitor.meetingTime).toLocaleString() : 'N/A'}</div></td>
+          </tr>
+        </table>
+
+        <div class="footer">
+          Generated on ${new Date().toLocaleString()} • GT MOM Visitor Management System
+        </div>
+      </body>
+      </html>
+    `;
+
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
       format: "A4",
       margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
       printBackground: true

@@ -7,29 +7,80 @@ import toast from "react-hot-toast";
 export default function VisitorDashboard() {
   const [publicMeetings, setPublicMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visitorData, setVisitorData] = useState(null);
   const navigate = useNavigate();
 
-  const visitorId = localStorage.getItem('visitorId') || Math.random().toString(36).substr(2, 9).toUpperCase();
+  const visitorId = localStorage.getItem('visitorId');
   const fullName = localStorage.getItem('visitorName') || "Guest";
-  const firstName = fullName.split(' ')[0]; // Take only the first name
+  const firstName = fullName.split(' ')[0];
+
+  // These come from state (fetched from server) so they're always up-to-date
+  const entryCode = visitorData?.entryCode || "";
+  const visitorToken = visitorData?.token || "";
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function fetchVisitorData() {
+      let visitor = null;
+      const storedId = localStorage.getItem('visitorId');
+      const storedToken = localStorage.getItem('visitorToken');
+      const storedEmail = localStorage.getItem('visitorEmail');
+
+      // Try 1: by MongoDB ID
+      if (!visitor && storedId && storedId !== "undefined" && storedId !== "null") {
+        try {
+          const vRes = await API.get(`/api/visitors/single/${storedId}`);
+          if (vRes.data?.visitor) visitor = vRes.data.visitor;
+        } catch (e) { console.warn("ID lookup failed:", e.message); }
+      }
+
+      // Try 2: by UUID token
+      if (!visitor && storedToken && storedToken !== "undefined" && storedToken !== "") {
+        try {
+          const vRes = await API.get(`/api/visitors/verify/${storedToken}`);
+          if (vRes.data?.visitor) {
+            visitor = vRes.data.visitor;
+            localStorage.setItem("visitorId", visitor._id);
+          }
+        } catch (e) { console.warn("Token lookup failed:", e.message); }
+      }
+
+      // Try 3: by email
+      if (!visitor && storedEmail && storedEmail !== "") {
+        try {
+          const vRes = await API.get(`/api/visitors/by-email/${encodeURIComponent(storedEmail)}`);
+          if (vRes.data?.visitor) {
+            visitor = vRes.data.visitor;
+            localStorage.setItem("visitorId", visitor._id);
+            localStorage.setItem("visitorToken", visitor.token || "");
+          }
+        } catch (e) { console.warn("Email lookup failed:", e.message); }
+      }
+
+      if (!cancelled) {
+        if (visitor) setVisitorData(visitor);
+        setLoading(false);
+      }
+    }
+
+    async function fetchMeetings() {
       try {
         const res = await API.get("/api/visitors/public/meetings");
         if (!cancelled) setPublicMeetings(res.data || []);
       } catch (err) {
-        console.error(err);
-      } finally {
-        if (!cancelled) setLoading(false);
+        // non-critical
       }
     }
 
-    load();
+    fetchMeetings();
+    fetchVisitorData();
+
+    // Poll every 5 seconds so status auto-updates when host approves
+    const poll = setInterval(fetchVisitorData, 5000);
     return () => {
       cancelled = true;
+      clearInterval(poll);
     };
   }, []);
 
@@ -40,6 +91,15 @@ export default function VisitorDashboard() {
     navigate("/role-selection");
     toast.success("Exited from portal");
   };
+
+  // Build QR URL using network IP (not localhost) so it works on mobile
+  const frontendBase = API.defaults.baseURL
+    .replace(':5000', ':5174')
+    .replace('localhost', '192.168.1.19')
+    .replace('127.0.0.1', '192.168.1.19');
+  const qrData = visitorToken
+    ? `${frontendBase}/visitor/verify/${visitorToken}`
+    : "";
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -73,38 +133,52 @@ export default function VisitorDashboard() {
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 flex flex-col items-center text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 z-0" />
 
-              <div className="relative z-10">
+              <div className="relative z-10 w-full">
                 <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner mx-auto rotate-3">
                   <CheckCircle className="w-10 h-10 text-emerald-600" />
                 </div>
 
                 <h2 className="text-2xl font-black text-slate-900 leading-tight">Identity Verified</h2>
                 <p className="text-sm text-green-600 font-bold mt-2">Entry Pass Confirmed ✅</p>
-                
-                <div className="mt-6 flex justify-center">
-                  <div className="p-2 bg-white rounded-2xl shadow-sm border-2 border-emerald-100">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('http://10.125.183.132:5174/visitor-dashboard')}`}
-                      alt="Entry Pass QR"
-                      className="w-28 h-28"
-                    />
+
+                {loading ? (
+                  <div className="mt-8 flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
+                    <p className="text-xs text-slate-400 font-semibold">Loading your pass...</p>
                   </div>
-                </div>
+                ) : visitorData?.status === "APPROVED" || visitorData?.status === "CHECKED_IN" ? (
+                  <>
+                    <div className="mt-6 flex justify-center">
+                      <div className="p-2 bg-white rounded-2xl shadow-sm border-2 border-emerald-100">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`}
+                          alt="Entry Pass QR"
+                          className="w-28 h-28"
+                        />
+                      </div>
+                    </div>
 
-                <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                  Your identity has been successfully verified. You are now authorized to enter the building.
-                </p>
+                    <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+                      Show this QR to the receptionist to check in.
+                    </p>
 
-                <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-full text-left">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Your Digital ID:</p>
-                  <p className="text-sm font-mono font-bold text-slate-700 bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm">
-                    {visitorId}
-                  </p>
-                </div>
+                    <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-full text-left">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Your Entry Code:</p>
+                      <p className="text-xl font-mono font-black text-slate-900 bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm tracking-[0.3em]">
+                        {entryCode}
+                      </p>
+                    </div>
 
-                <div className="mt-6 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <p className="text-[10px] text-emerald-700 font-bold">WELCOME TO THE OFFICE</p>
-                </div>
+                    <div className="mt-6 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                      <p className="text-[10px] text-emerald-700 font-bold">WELCOME TO THE OFFICE</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-8 p-5 bg-amber-50 rounded-2xl border border-amber-100 w-full text-left">
+                    <p className="text-sm font-bold text-amber-800">⏳ Awaiting Approval</p>
+                    <p className="text-xs text-amber-600 mt-1">Your entry pass (QR + Code) will appear here once the host approves your request. Refresh this page after approval.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

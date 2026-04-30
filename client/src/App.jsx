@@ -24,6 +24,7 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import VisitorDashboard from "./pages/VisitorDashboard";
 import VisitorFormPublic from "./pages/VisitorFormPublic";
 import ReceptionistDashboard from "./pages/ReceptionistDashboard";
+import VisitorVerification from "./pages/VisitorVerification";
 import { useEffect, useState } from "react";
 import API from "./api/api";
 import { useAuth } from "./hooks/useAuth";
@@ -120,6 +121,7 @@ function App() {
       <Routes>
         <Route path="/v/:name/:token" element={<VisitorFormPublic />} />
         <Route path="/visitor-form/*" element={<VisitorFormPublic />} />
+        <Route path="/visitor/verify/:token" element={<VisitorVerification />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

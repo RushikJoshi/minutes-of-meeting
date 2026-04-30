@@ -15,10 +15,10 @@ const app = express();
 app.use(express.json());
 
 app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
+   cors({
+      origin: true,
+      credentials: true,
+   })
 );
 
 /* ===========================
@@ -47,7 +47,7 @@ const visitorRoutes = require("./routes/visitorRoutes");
 
 // Root Route
 app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "MOM Backend Running" });
+   res.json({ status: "ok", message: "MOM Backend Running" });
 });
 
 /* ===========================
@@ -93,22 +93,22 @@ const PORT = cfg.port;
 const { startReminderLoop } = require("./services/reminderService");
 
 connectDB(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB Connected ✅");
+   .then(() => {
+      console.log("MongoDB Connected ✅");
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} 🚀`);
+      app.listen(PORT, () => {
+         console.log(`Server running on port ${PORT} 🚀`);
 
-      startReminderLoop();
+         startReminderLoop();
 
-      // Collaboration Server (safe — won't crash on port conflict)
-      const { createCollabServer, startCollabServer } = require("./services/collabService");
-      const collabServer = createCollabServer();
-      const COLLAB_PORT = cfg.collabPort;
-      startCollabServer(collabServer, COLLAB_PORT);
-    });
-  })
-  .catch((err) => {
-    console.error("Mongo Error:", err?.message || err);
-    process.exit(1);
-  });
+         // Collaboration Server (safe — won't crash on port conflict)
+         const { createCollabServer, startCollabServer } = require("./services/collabService");
+         const collabServer = createCollabServer();
+         const COLLAB_PORT = cfg.collabPort;
+         startCollabServer(collabServer, COLLAB_PORT);
+      });
+   })
+   .catch((err) => {
+      console.error("Mongo Error:", err?.message || err);
+      process.exit(1);
+   });

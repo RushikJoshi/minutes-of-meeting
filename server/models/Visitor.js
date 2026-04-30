@@ -17,6 +17,9 @@ const visitorSchema = new mongoose.Schema({
     default: "PENDING"
   },
 
+  token: { type: String, unique: true },
+  entryCode: { type: String },
+
   inTime: { type: Date },
   outTime: { type: Date },
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  User, Mail, Phone, MapPin, Camera, Clock, CheckCircle, 
+import {
+  User, Mail, Phone, MapPin, Camera, Clock, CheckCircle,
   RefreshCw, Briefcase, Download, Share2, AlertCircle, FileCheck
 } from "lucide-react";
 import Webcam from "react-webcam";
@@ -49,6 +49,8 @@ export default function VisitorFormPublic() {
             localStorage.setItem("pendingRole", "visitor");
             localStorage.setItem("visitorName", res.data.name);
             localStorage.setItem("visitorId", res.data.visitorId);
+            localStorage.setItem("visitorToken", res.data.token || token);
+            localStorage.setItem("entryCode", res.data.entryCode || "");
             navigate("/visitor-dashboard", { replace: true });
             return;
           }
@@ -98,14 +100,20 @@ export default function VisitorFormPublic() {
     setSubmitting(true);
 
     try {
-      const res = await API.post("/api/visitors/submit-visitor", {
+      const res = await API.post("/api/visitors/create", {
         token,
         ...formData
       });
 
       if (res.data.success) {
         toast.success("Request Submitted for Approval!");
-        setVisitorData(res.data.visitor);
+        // Save visitor identity to localStorage so the dashboard can fetch live data
+        const v = res.data.visitor;
+        localStorage.setItem("visitorId", v._id);
+        localStorage.setItem("visitorToken", v.token || "");
+        localStorage.setItem("visitorName", v.name || formData.name);
+        localStorage.setItem("visitorEmail", v.email || formData.email);
+        setVisitorData(v);
         setSubmitted(true);
       }
     } catch (err) {
@@ -149,7 +157,7 @@ export default function VisitorFormPublic() {
             <p className="text-slate-500 mt-4 leading-relaxed">
               Hello <strong>{formData.name}</strong>, your visit request has been recorded.
             </p>
-            
+
             <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-left space-y-4">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">📧</div>
@@ -261,7 +269,7 @@ export default function VisitorFormPublic() {
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Camera className="w-4 h-4" /> Photo & Identity
             </h3>
-            
+
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex-1 space-y-4">
                 <div className="relative w-full aspect-square max-w-[200px] mx-auto bg-slate-100 rounded-3xl overflow-hidden border-4 border-white shadow-xl">
