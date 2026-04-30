@@ -181,8 +181,8 @@ export default function MeetingDetails() {
                         <div className="text-sm font-bold text-slate-900">{participantLabel(participant)}</div>
                         <div className="mt-1 text-xs text-slate-500">{participant.kind === "user" ? "Registered user" : "Guest participant"}</div>
                       </div>
-                      <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase ${participant.status === "joined" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-blue-200 bg-blue-50 text-blue-700"}`}>
-                        {participant.status || "invited"}
+                      <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase ${participant.status === "joined" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                        {participant.status === "joined" ? "Present" : "Absent"}
                       </span>
                     </div>
                   </div>

@@ -219,6 +219,12 @@ async function internalEndMeeting(meetingId) {
 
     // 1. Attendance
     console.log(`[Lifecycle] 👥 Generating attendance...`);
+    meeting.participants.forEach(p => {
+      if (p.isActive) {
+        p.isActive = false;
+        p.lastActiveAt = meeting.endTime;
+      }
+    });
     await generateAttendance(meeting);
 
     // 2. MOM (Generate only once)

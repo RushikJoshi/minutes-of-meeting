@@ -116,7 +116,13 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
       </div>
 
       <div class="card">
-        <div class="label">Attendance & Participants</div>
+        <div class="label">Attendance Summary</div>
+        <div class="chips" style="margin-bottom: 12px;">
+          <span class="chip">Total Invited: ${meeting.participants?.length || 0}</span>
+          <span class="chip" style="background:#ecfdf5; border-color:#a7f3d0; color:#065f46;">Present: ${(meeting.participants || []).filter(p => p.status === 'joined').length}</span>
+          <span class="chip" style="background:#fef2f2; border-color:#fecaca; color:#991b1b;">Absent: ${(meeting.participants || []).filter(p => p.status !== 'joined').length}</span>
+        </div>
+        <div class="label">Participants Detail</div>
         <table>
           <thead>
             <tr>
@@ -124,17 +130,30 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
               <th>Status</th>
               <th>Join Time</th>
               <th>Leave Time</th>
+              <th>Duration</th>
             </tr>
           </thead>
           <tbody>
-            ${(meeting.participants || []).map(p => `
+            ${(meeting.participants || []).map(p => {
+              const joinT = p.joinedAt ? new Date(p.joinedAt).getTime() : 0;
+              const leaveT = p.lastActiveAt ? new Date(p.lastActiveAt).getTime() : 0;
+              let duration = '—';
+              if (joinT && leaveT && leaveT >= joinT) {
+                const mins = Math.round((leaveT - joinT) / 60000);
+                duration = mins > 0 ? (mins + " min") : '< 1 min';
+              } else if (p.status === 'joined') {
+                duration = 'Ongoing';
+              }
+              
+              return `
               <tr>
                 <td>${escapeHtml(p.name || p.email)}</td>
-                <td><span class="badge ${p.status === 'joined' ? 'done' : 'pending'}">${p.status === 'joined' ? 'Present' : 'Invited'}</span></td>
+                <td><span class="badge ${p.status === 'joined' ? 'done' : 'pending'}">${p.status === 'joined' ? 'Present' : 'Absent'}</span></td>
                 <td>${p.joinedAt ? new Date(p.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                <td>${p.leaveTime ? new Date(p.leaveTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                <td>${p.lastActiveAt ? new Date(p.lastActiveAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                <td>${duration}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
           </tbody>
         </table>
       </div>
