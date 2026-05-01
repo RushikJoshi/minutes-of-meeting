@@ -5,6 +5,7 @@ import AppLayout from "./layouts/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
 import Meetings from "./pages/Meetings";
+import CreateMeeting from "./pages/CreateMeeting";
 import MeetingDetails from "./pages/MeetingDetails";
 import ShareView from "./pages/ShareView";
 import Login from "./pages/Login";
@@ -119,6 +120,7 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        <Route path="/v/:token" element={<VisitorFormPublic />} />
         <Route path="/v/:name/:token" element={<VisitorFormPublic />} />
         <Route path="/visitor-form/*" element={<VisitorFormPublic />} />
         <Route path="/visitor/verify/:token" element={<VisitorVerification />} />
@@ -140,6 +142,7 @@ function App() {
             <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/meetings" element={<Meetings />} />
+            <Route path="/meetings/new" element={<CreateMeeting />} />
             <Route path="/meeting/:id" element={<MeetingDetails />} />
             <Route path="/meeting/:id/create-mom" element={<MinutesEditor />} />
             <Route path="/meeting/:id/minutes" element={<MinutesEditor />} />

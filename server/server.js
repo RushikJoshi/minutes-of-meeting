@@ -40,6 +40,7 @@ const editorTemplateRoutes = require("./routes/editorTemplateRoutes");
 
 // ✅ NEW: Visitor Routes
 const visitorRoutes = require("./routes/visitorRoutes");
+const metaRoutes = require("./routes/metaRoutes");
 
 /* ===========================
    TEST ROUTES
@@ -69,6 +70,7 @@ app.use(editorTemplateRoutes);
 
 // ✅ IMPORTANT: Visitor API Route
 app.use("/api/visitors", visitorRoutes);
+app.use("/api/meta", metaRoutes);
 
 // Add meeting routes
 app.use("/api/meetings", meetingRoutes);

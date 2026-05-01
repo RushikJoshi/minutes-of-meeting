@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { User, Users, Building2, UserCircle, ArrowRight, ArrowLeft, ExternalLink, Copy, Share2 } from "lucide-react";
 import API from "../api/api";
 import toast from "react-hot-toast";
+import { getPublicFrontendBaseUrl } from "../utils/publicUrl";
 
 export default function RoleSelection() {
   const [selectedRole, setSelectedRole] = useState(null);
@@ -66,8 +67,14 @@ export default function RoleSelection() {
     try {
       const res = await API.post("/api/visitors/generate-qr", { name: visitorName });
       if (res.data.success) {
-        const baseUrl = window.location.origin;
-        const url = `${baseUrl}/v/${encodeURIComponent(res.data.name)}/${res.data.token}`;
+        let baseUrl = getPublicFrontendBaseUrl();
+        try {
+          const meta = await API.get("/api/meta/public-client-base");
+          if (meta.data?.baseUrl) baseUrl = meta.data.baseUrl;
+        } catch {
+          // ignore; fall back to current origin/env
+        }
+        const url = `${baseUrl}/v/${res.data.token}`;
         setQrData(url);
         toast.success("Link Generated successfully!");
       }
@@ -83,9 +90,42 @@ export default function RoleSelection() {
     toast.success("Link copied to clipboard!");
   };
 
-  const shareToWhatsApp = () => {
-    const text = `Visitor Registration Link for ${visitorName}: ${qrData}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  const copyLinkOnly = async () => {
+    const link = String(qrData || "").trim();
+    if (!link) {
+      toast.error("Link not available yet");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("URL copied (clickable in WhatsApp)");
+    } catch {
+      toast.error("Failed to copy URL");
+    }
+  };
+
+  const shareToWhatsApp = async () => {
+    const link = String(qrData || "").trim();
+    if (!link) {
+      toast.error("Link not available yet");
+      return;
+    }
+
+    // Prefer native share (mobile) so WhatsApp treats the URL as a real link preview/clickable.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "GT MOM", url: link });
+        return;
+      } catch {
+        // ignore and fall back to wa link
+      }
+    }
+
+    const encoded = encodeURIComponent(link);
+
+    // Fallback: send ONLY the URL (most reliable for WhatsApp link detection).
+    const opened = window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    if (!opened) window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
   };
 
   return (
@@ -158,16 +198,7 @@ export default function RoleSelection() {
                   <p className="text-sm text-slate-500 mb-4">The secure registration link for {visitorName} is ready.</p>
                 </div>
 
-                <div className="w-full flex flex-col items-center mb-6">
-                  <div className="p-4 bg-white rounded-3xl shadow-lg border-2 border-purple-50">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData.replace('localhost', '10.125.183.132'))}`}
-                      alt="Registration QR"
-                      className="w-48 h-48"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-4 font-bold uppercase tracking-widest">Scan QR or</p>
-                </div>
+                <div className="w-full flex flex-col items-center mb-6" />
 
                 <div className="grid grid-cols-1 gap-3 w-full">
                   <button
@@ -196,6 +227,14 @@ export default function RoleSelection() {
                       WhatsApp
                     </button>
                   </div>
+
+                  <button
+                    onClick={copyLinkOnly}
+                    className="flex items-center justify-center gap-2 py-3 bg-white text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition border border-slate-200"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy URL Only
+                  </button>
                 </div>
 
                 <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100">

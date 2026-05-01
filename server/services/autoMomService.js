@@ -18,7 +18,10 @@ function buildAttendance(meeting) {
 
   for (const p of participants) {
     let status = "Absent";
-    let joinTime = p.joinedAt ? new Date(p.joinedAt) : null;
+    const joinSource = p.lastJoinedAt || p.joinedAt;
+    let joinTime = joinSource ? new Date(joinSource) : null;
+    const leaveSource = p.leftAt || p.lastActiveAt;
+    const leaveTime = leaveSource ? new Date(leaveSource) : null;
     let durationMinutes = 0;
 
     if (p.status === "joined" && joinTime) {
@@ -44,8 +47,8 @@ function buildAttendance(meeting) {
         // Left early logic can go here if needed
       }
 
-      if (p.lastActiveAt) {
-        durationMinutes = Math.round((new Date(p.lastActiveAt) - joinTime) / (1000 * 60));
+      if (leaveTime) {
+        durationMinutes = Math.round((leaveTime - joinTime) / (1000 * 60));
       }
     } else {
       absentCount++;
@@ -56,7 +59,7 @@ function buildAttendance(meeting) {
       email: p.email,
       status,
       joinTime: joinTime ? joinTime.toISOString() : null,
-      leaveTime: p.lastActiveAt ? new Date(p.lastActiveAt).toISOString() : null,
+      leaveTime: leaveTime ? leaveTime.toISOString() : null,
       durationMinutes,
     });
   }
@@ -81,6 +84,7 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
   if (!meeting) throw new Error("Meeting not found");
 
   const attendance = buildAttendance(meeting);
+  const absentList = attendance.details.filter((d) => d.status === "Absent");
 
   // Attempt to generate AI summary if notes exist
   let aiSummary = null;
@@ -127,7 +131,15 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
         attendeesList: attendance.details.map((d, i) => ({
           srNo: String(i + 1),
           name: d.name,
-          status: d.status
+          email: d.email,
+          status: d.status === "Absent" ? "Absent" : d.status === "Late" ? "Late" : "Present",
+          joinedAt: d.joinTime ? new Date(d.joinTime) : undefined,
+          leftAt: d.leaveTime ? new Date(d.leaveTime) : undefined,
+          durationMinutes: typeof d.durationMinutes === "number" ? d.durationMinutes : undefined,
+        })),
+        absenteesList: absentList.map((d) => ({
+          name: d.name,
+          reason: "",
         })),
       },
       $setOnInsert: {

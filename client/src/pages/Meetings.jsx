@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import MeetingModal from "../components/MeetingModal";
 import MeetingCard from "../components/MeetingCard";
@@ -10,6 +11,7 @@ const MEETINGS_QUERY_KEY = ["meetings"];
 
 export default function Meetings() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [status, setStatus] = useState("all");
@@ -21,25 +23,11 @@ export default function Meetings() {
   const [currentPage, setCurrentPage] = useState(1);
   const meetingsPerPage = 9;
 
-  // Reset pagination on filter change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, status, priority, dateFilter]);
-
   const meetingsQuery = useQuery({
     queryKey: MEETINGS_QUERY_KEY,
     queryFn: async () => {
       const response = await API.get("/meetings");
       return Array.isArray(response.data) ? response.data : [];
-    },
-  });
-
-  const createMeeting = useMutation({
-    mutationFn: async (payload) => (await API.post("/create-meeting", payload)).data,
-    onSuccess: () => {
-      toast.success("Meeting created.");
-      queryClient.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY });
-      setShowModal(false);
     },
   });
 
@@ -112,8 +100,7 @@ export default function Meetings() {
               type="button"
               className="btn-primary"
               onClick={() => {
-                setEditingMeeting(null);
-                setShowModal(true);
+                navigate("/meetings/new");
               }}
             >
               New meeting
@@ -125,23 +112,43 @@ export default function Meetings() {
               <input
                 className="input-field md:col-span-2"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Search by title, agenda, or participant email"
               />
               <input
                 type="date"
                 className="input-field"
                 value={dateFilter}
-                onChange={(event) => setDateFilter(event.target.value)}
+                onChange={(event) => {
+                  setDateFilter(event.target.value);
+                  setCurrentPage(1);
+                }}
               />
-              <select className="input-field" value={status} onChange={(event) => setStatus(event.target.value)}>
+              <select
+                className="input-field"
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value);
+                  setCurrentPage(1);
+                }}
+              >
                 <option value="all">All status</option>
                 <option value="scheduled">Scheduled</option>
                 <option value="ongoing">Ongoing</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              <select className="input-field" value={priority} onChange={(event) => setPriority(event.target.value)}>
+              <select
+                className="input-field"
+                value={priority}
+                onChange={(event) => {
+                  setPriority(event.target.value);
+                  setCurrentPage(1);
+                }}
+              >
                 <option value="all">All priority</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
@@ -187,19 +194,15 @@ export default function Meetings() {
       </div>
 
       <MeetingModal
-        open={showModal}
+        open={showModal && Boolean(editingMeeting)}
         meeting={editingMeeting}
         onClose={() => {
           setEditingMeeting(null);
           setShowModal(false);
         }}
-        isSubmitting={createMeeting.isPending || updateMeeting.isPending}
+        isSubmitting={updateMeeting.isPending}
         onSubmit={async (payload) => {
-          if (editingMeeting?._id) {
-            await updateMeeting.mutateAsync({ id: editingMeeting._id, payload });
-            return;
-          }
-          await createMeeting.mutateAsync(payload);
+          await updateMeeting.mutateAsync({ id: editingMeeting._id, payload });
         }}
       />
     </div>

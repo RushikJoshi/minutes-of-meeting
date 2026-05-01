@@ -611,8 +611,13 @@ export default function WordLikeEditor({
 
   const handleManualSave = async () => {
     if (!editor || !onSave) return;
-    await onSave(editor.getHTML(), true);
-    setSaveMessage(`Saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    try {
+      await onSave(editor.getHTML(), true);
+      setSaveMessage(`Saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    } catch (err) {
+      console.error("[WordLikeEditor] Manual save failed", err);
+      setSaveMessage("Save failed");
+    }
   };
 
   if (loading || !editor || !editorReady) {

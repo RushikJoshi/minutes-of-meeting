@@ -45,12 +45,29 @@ export default function MeetingDetails() {
     },
   });
 
-  const statusMutation = useMutation({
-    mutationFn: async (status) => (await API.patch(`/meeting/${id}`, { status })).data,
+  const startMeeting = useMutation({
+    mutationFn: async () => (await API.post(`/meeting/${id}/start`)).data,
     onSuccess: () => {
-      toast.success("Meeting status updated.");
+      toast.success("Meeting started.");
       queryClient.invalidateQueries({ queryKey: ["meeting", id] });
       queryClient.invalidateQueries({ queryKey: ["meetings"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to start meeting.");
+    },
+  });
+
+  const endMeeting = useMutation({
+    mutationFn: async () => (await API.post(`/meeting/${id}/end`)).data,
+    onSuccess: () => {
+      toast.success("Meeting ended. Auto-generated MOM + PDF are ready.");
+      queryClient.invalidateQueries({ queryKey: ["meeting", id] });
+      queryClient.invalidateQueries({ queryKey: ["meeting-mom", id] });
+      queryClient.invalidateQueries({ queryKey: ["meeting-minutes", id] });
+      queryClient.invalidateQueries({ queryKey: ["meetings"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to end meeting.");
     },
   });
 
@@ -115,17 +132,23 @@ export default function MeetingDetails() {
               <button
                 type="button"
                 className="btn-primary !bg-emerald-600 hover:!bg-emerald-700"
-                onClick={() => statusMutation.mutate("ongoing")}
+                onClick={() => startMeeting.mutate()}
+                disabled={startMeeting.isPending}
               >
-                Start Meeting
+                {startMeeting.isPending ? "Starting..." : "Start Meeting"}
               </button>
             )}
             <button type="button" className="btn-secondary" onClick={() => setShowEditModal(true)}>
               Edit meeting
             </button>
             {meeting.status === "ongoing" && (
-              <button type="button" className="btn-secondary" onClick={() => statusMutation.mutate("completed")}>
-                Mark completed
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => endMeeting.mutate()}
+                disabled={endMeeting.isPending}
+              >
+                {endMeeting.isPending ? "Ending..." : "End meeting & generate MOM"}
               </button>
             )}
             <Link className="btn-primary" to={`/meeting/${meeting._id}/minutes`}>

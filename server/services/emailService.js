@@ -54,6 +54,141 @@ class EmailService {
     return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  formatDateTime({ date, timezone }) {
+    try {
+      const dt = new Date(date);
+      if (Number.isNaN(dt.getTime())) return "";
+      return dt.toLocaleString("en-IN", {
+        timeZone: timezone || undefined,
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  }
+
+  async sendMeetingInvitation({ meeting, recipients, cc = [] }) {
+    if (!this.isConfigured()) return { sent: 0, failed: recipients?.map((r) => ({ email: r.email, error: "Email not configured" })) || [] };
+    const transporter = this.getTransporter();
+
+    const list = Array.isArray(recipients) ? recipients : [];
+    if (list.length === 0) return { sent: 0, failed: [] };
+
+    const { getPublicClientBaseUrl } = require("../utils/publicClientBase");
+    const frontendBase = getPublicClientBaseUrl() || this.getEnv("PUBLIC_CLIENT_BASE_URL") || "http://localhost:5174";
+    const safeCc = (Array.isArray(cc) ? cc : [])
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+
+    const title = meeting?.title || "Meeting";
+    const agenda = meeting?.agenda || "";
+    const description = meeting?.description || "";
+    const meetingType = meeting?.type || "online";
+    const location = meeting?.location || "";
+    const platform = meeting?.platform || (meetingType === "online" ? "zoom" : "offline");
+    const meetingLink = meeting?.meetingLink || meeting?.link || "";
+    const when = this.formatDateTime({ date: meeting?.startTime || meeting?.date, timezone: meeting?.timezone });
+
+    const detailsLink = meeting?._id ? `${frontendBase}/meeting/${meeting._id}` : frontendBase;
+
+    const subject = `Invitation: ${title}${when ? ` \u2022 ${when}` : ""}`;
+
+    const failed = [];
+    let sent = 0;
+
+    for (const recipient of list) {
+      const to = String(recipient?.email || "").trim();
+      if (!to) continue;
+
+      const joinLink = recipient?.joinLink || "";
+
+      const html = `
+        <div style="background:#f1f5f9; padding:24px 12px; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+          <style>
+            @media (max-width: 600px) {
+              .container { width: 100% !important; }
+              .stack { display:block !important; width:100% !important; }
+              .btn { display:block !important; width:100% !important; box-sizing:border-box !important; }
+              .px { padding-left:16px !important; padding-right:16px !important; }
+            }
+          </style>
+          <table class="container" role="presentation" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:18px; overflow:hidden;">
+            <tr>
+              <td style="background:linear-gradient(135deg,#2563eb,#7c3aed); padding:20px 24px; color:#fff;" class="px">
+                <div style="font-size:12px; letter-spacing:0.16em; text-transform:uppercase; opacity:0.9; font-weight:800;">GT MOM</div>
+                <div style="font-size:22px; font-weight:900; margin-top:8px;">You're invited: ${this.escapeHtml(title)}</div>
+                ${when ? `<div style="margin-top:8px; font-size:14px; opacity:0.95;">${this.escapeHtml(when)}${meeting?.timezone ? ` (${this.escapeHtml(meeting.timezone)})` : ""}</div>` : ""}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px 24px;" class="px">
+                <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+                  <tr>
+                    <td class="stack" style="width:58%; vertical-align:top; padding-right:12px;">
+                      <div style="font-size:12px; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:0.14em;">Details</div>
+                      <div style="margin-top:10px; color:#0f172a; font-size:14px; line-height:1.6;">
+                        <div><strong>Type:</strong> ${this.escapeHtml(meetingType === "offline" ? "Offline" : "Online")} ${meetingType === "online" ? `(${this.escapeHtml(platform)})` : ""}</div>
+                        ${meetingType === "offline" ? `<div><strong>Location:</strong> ${this.escapeHtml(location || "TBD")}</div>` : ""}
+                        ${agenda ? `<div style="margin-top:10px;"><strong>Agenda:</strong> ${this.escapeHtml(agenda)}</div>` : ""}
+                        ${description ? `<div style="margin-top:10px;"><strong>Description:</strong> ${this.escapeHtml(description)}</div>` : ""}
+                      </div>
+                    </td>
+                    <td class="stack" style="width:42%; vertical-align:top; padding-left:12px;">
+                      <div style="font-size:12px; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:0.14em;">Actions</div>
+                      <div style="margin-top:12px;">
+                        ${joinLink ? `<a class="btn" href="${joinLink}" style="display:inline-block; background:#2563eb; color:#fff; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; box-shadow:0 10px 18px rgba(37,99,235,0.18);">Join meeting</a>` : ""}
+                        ${meetingType === "online" && meetingLink ? `<a class="btn" href="${meetingLink}" style="display:inline-block; margin-top:10px; background:#ffffff; color:#1e293b; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px solid #e2e8f0;">Open ${this.escapeHtml(platform)} link</a>` : ""}
+                        <a class="btn" href="${detailsLink}" style="display:inline-block; margin-top:10px; background:#f8fafc; color:#0f172a; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px dashed #cbd5e1;">View details</a>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div style="margin-top:18px; padding:14px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-size:12px; color:#475569; line-height:1.6;">
+                  ${joinLink ? `<div><strong>Join link:</strong> <a href="${joinLink}" style="color:#2563eb; word-break:break-all;">${joinLink}</a></div>` : ""}
+                  ${meetingType === "online" && meetingLink ? `<div style="margin-top:8px;"><strong>Platform link:</strong> <a href="${meetingLink}" style="color:#2563eb; word-break:break-all;">${meetingLink}</a></div>` : ""}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 24px; background:#ffffff; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:12px;" class="px">
+                This invite was sent by GT MOM. If you weren't expecting this, you can ignore this email.
+              </td>
+            </tr>
+          </table>
+        </div>
+      `;
+
+      const textParts = [
+        `You're invited: ${title}`,
+        when ? `When: ${when}${meeting?.timezone ? ` (${meeting.timezone})` : ""}` : "",
+        meetingType === "offline" ? `Location: ${location || "TBD"}` : meetingLink ? `Platform link: ${meetingLink}` : "",
+        joinLink ? `Join link: ${joinLink}` : "",
+        `Details: ${detailsLink}`,
+      ].filter(Boolean);
+
+      try {
+        await transporter.sendMail({
+          from: `"GT MOM" <${this.getEnv("EMAIL_USER", "SMTP_USER")}>`,
+          to,
+          cc: safeCc.length ? safeCc : undefined,
+          subject,
+          text: textParts.join("\n"),
+          html,
+        });
+        sent += 1;
+      } catch (err) {
+        failed.push({ email: to, error: err?.message || "Failed to send" });
+      }
+    }
+
+    return { sent, failed };
+  }
+
   // 1. Send Request to Host (Approve/Reject)
   async sendApprovalRequestToHost(visitor) {
     if (!this.isConfigured()) return;
@@ -128,6 +263,82 @@ class EmailService {
       console.log(`✅ Approval request sent to host: ${visitor.meetingWithEmail}`);
     } catch (err) {
       console.error(`❌ Mail Error (Approval Request):`, err.message);
+    }
+  }
+
+  async sendMeetingReminder({ meeting, recipients, minutesBefore = 0 }) {
+    if (!this.isConfigured()) {
+      return {
+        sent: 0,
+        failed: (Array.isArray(recipients) ? recipients : []).map((r) => ({
+          email: typeof r === "string" ? r : r?.email,
+          error: "Email not configured",
+        })),
+      };
+    }
+
+    const transporter = this.getTransporter();
+    const list = Array.isArray(recipients) ? recipients : [];
+    const toList = list
+      .map((r) => (typeof r === "string" ? r : r?.email))
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+
+    if (toList.length === 0) return { sent: 0, failed: [] };
+
+    const { getPublicClientBaseUrl } = require("../utils/publicClientBase");
+    const frontendBase = getPublicClientBaseUrl() || this.getEnv("PUBLIC_CLIENT_BASE_URL") || "http://localhost:5174";
+    const title = meeting?.title || "Meeting";
+    const when = this.formatDateTime({ date: meeting?.startTime || meeting?.date, timezone: meeting?.timezone });
+    const detailsLink = meeting?._id ? `${frontendBase}/meeting/${meeting._id}` : frontendBase;
+
+    const subject = `Reminder: ${title}${minutesBefore ? ` (in ${minutesBefore} min)` : ""}${when ? ` \u2022 ${when}` : ""}`;
+
+    const html = `
+      <div style="background:#f1f5f9; padding:24px 12px; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:18px; overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#f97316,#7c3aed); padding:20px 24px; color:#fff;">
+              <div style="font-size:12px; letter-spacing:0.16em; text-transform:uppercase; opacity:0.9; font-weight:800;">GT MOM</div>
+              <div style="font-size:22px; font-weight:900; margin-top:8px;">Reminder: ${this.escapeHtml(title)}</div>
+              ${when ? `<div style="margin-top:8px; font-size:14px; opacity:0.95;">${this.escapeHtml(when)}${meeting?.timezone ? ` (${this.escapeHtml(meeting.timezone)})` : ""}</div>` : ""}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 24px; color:#0f172a;">
+              <p style="margin:0 0 12px; font-size:15px; line-height:1.6; color:#334155;">
+                Your meeting is coming up${minutesBefore ? ` in <strong>${this.escapeHtml(minutesBefore)}</strong> minutes` : ""}.
+              </p>
+              <div style="margin:16px 0; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+                ${meeting?.agenda ? `<div style="font-weight:800; margin-bottom:6px;">Agenda</div><div style="color:#475569; line-height:1.6;">${this.escapeHtml(meeting.agenda)}</div>` : `<div style="color:#475569;">Open the meeting details for agenda and links.</div>`}
+              </div>
+              <a href="${detailsLink}" style="display:inline-block; background:#7c3aed; color:#fff; text-decoration:none; padding:12px 16px; border-radius:12px; font-weight:800;">
+                Open meeting details
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px; font-size:12px; color:#94a3b8; background:#ffffff; border-top:1px solid #e2e8f0;">
+              If you didnâ€™t expect this email, you can ignore it.
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: `"GT MOM" <${this.getEnv("EMAIL_USER")}>`,
+        to: toList.join(","),
+        subject,
+        html,
+      });
+      return { sent: toList.length, failed: [] };
+    } catch (err) {
+      return {
+        sent: 0,
+        failed: toList.map((email) => ({ email, error: err?.message || "Failed to send" })),
+      };
     }
   }
 

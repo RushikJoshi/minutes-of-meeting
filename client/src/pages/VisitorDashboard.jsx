@@ -3,14 +3,16 @@ import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import { CheckCircle, Calendar, LogOut } from "lucide-react";
 import toast from "react-hot-toast";
+import { getPublicFrontendBaseUrl } from "../utils/publicUrl";
 
 export default function VisitorDashboard() {
   const [publicMeetings, setPublicMeetings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [meetingsLoading, setMeetingsLoading] = useState(true);
+  const [visitorLoading, setVisitorLoading] = useState(true);
   const [visitorData, setVisitorData] = useState(null);
+  const [publicFrontendBase, setPublicFrontendBase] = useState(getPublicFrontendBaseUrl());
   const navigate = useNavigate();
 
-  const visitorId = localStorage.getItem('visitorId');
   const fullName = localStorage.getItem('visitorName') || "Guest";
   const firstName = fullName.split(' ')[0];
 
@@ -60,7 +62,7 @@ export default function VisitorDashboard() {
 
       if (!cancelled) {
         if (visitor) setVisitorData(visitor);
-        setLoading(false);
+        setVisitorLoading(false);
       }
     }
 
@@ -68,13 +70,25 @@ export default function VisitorDashboard() {
       try {
         const res = await API.get("/api/visitors/public/meetings");
         if (!cancelled) setPublicMeetings(res.data || []);
-      } catch (err) {
+      } catch {
         // non-critical
+      } finally {
+        if (!cancelled) setMeetingsLoading(false);
       }
     }
 
     fetchMeetings();
     fetchVisitorData();
+
+    // Ensure QR URL is reachable from phones (even if dashboard opened on localhost)
+    (async () => {
+      try {
+        const meta = await API.get("/api/meta/public-client-base");
+        if (!cancelled && meta.data?.baseUrl) setPublicFrontendBase(meta.data.baseUrl);
+      } catch {
+        // ignore; fall back to origin/env
+      }
+    })();
 
     // Poll every 5 seconds so status auto-updates when host approves
     const poll = setInterval(fetchVisitorData, 5000);
@@ -88,15 +102,14 @@ export default function VisitorDashboard() {
     localStorage.removeItem("pendingRole");
     localStorage.removeItem("visitorId");
     localStorage.removeItem("visitorName");
+    localStorage.removeItem("visitorToken");
+    localStorage.removeItem("visitorEmail");
     navigate("/role-selection");
     toast.success("Exited from portal");
   };
 
-  // Build QR URL using network IP (not localhost) so it works on mobile
-  const frontendBase = API.defaults.baseURL
-    .replace(':5000', ':5174')
-    .replace('localhost', '192.168.1.19')
-    .replace('127.0.0.1', '192.168.1.19');
+  // QR should point to a URL reachable from the scanning device.
+  const frontendBase = publicFrontendBase || getPublicFrontendBaseUrl();
   const qrData = visitorToken
     ? `${frontendBase}/visitor/verify/${visitorToken}`
     : "";
@@ -141,7 +154,7 @@ export default function VisitorDashboard() {
                 <h2 className="text-2xl font-black text-slate-900 leading-tight">Identity Verified</h2>
                 <p className="text-sm text-green-600 font-bold mt-2">Entry Pass Confirmed ✅</p>
 
-                {loading ? (
+                {visitorLoading ? (
                   <div className="mt-8 flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
                     <p className="text-xs text-slate-400 font-semibold">Loading your pass...</p>
@@ -193,7 +206,7 @@ export default function VisitorDashboard() {
                 <h2 className="text-xl font-bold text-slate-900">Upcoming Meetings</h2>
               </div>
 
-              {loading ? (
+              {meetingsLoading ? (
                 <div className="flex flex-col items-center py-20">
                   <div className="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin" />
                   <p className="text-slate-400 mt-4 font-medium">Loading schedule...</p>

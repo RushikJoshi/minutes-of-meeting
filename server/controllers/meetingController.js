@@ -127,7 +127,8 @@ function ensureMeetingLink({ meetingType, platform, link }) {
 }
 
 function getParticipantJoinUrl(meetingId, participant) {
-  const baseUrl = process.env.PUBLIC_CLIENT_BASE_URL || "http://localhost:5173";
+  const { getPublicClientBaseUrl } = require("../utils/publicClientBase");
+  const baseUrl = getPublicClientBaseUrl() || process.env.PUBLIC_CLIENT_BASE_URL || "http://localhost:5174";
   const inviteToken = participant?.inviteToken || generateInviteToken();
   return `${baseUrl}/join/${meetingId}?invite=${inviteToken}`;
 }
@@ -139,7 +140,18 @@ function sanitizeParticipant(participant) {
   return raw;
 }
 
-async function sendInvitations({ meeting, participants }) {
+function getInviteCcList(req) {
+  const raw = process.env.MEETING_INVITE_CC || "";
+  const configured = raw
+    .split(",")
+    .map((value) => normalizeEmail(value))
+    .filter((value) => isEmailLike(value));
+
+  const organizer = req?.user?.email ? [normalizeEmail(req.user.email)] : [];
+  return Array.from(new Set([...organizer, ...configured]));
+}
+
+async function sendInvitations({ meeting, participants, cc = [] }) {
   if (!Array.isArray(participants) || participants.length === 0) {
     return { sent: 0, failed: [] };
   }
@@ -149,7 +161,7 @@ async function sendInvitations({ meeting, participants }) {
     joinLink: getParticipantJoinUrl(meeting._id, participant),
   }));
 
-  const result = await emailService.sendMeetingInvitation({ meeting, recipients });
+  const result = await emailService.sendMeetingInvitation({ meeting, recipients, cc });
   const sentEmails = new Set(
     recipients
       .map((recipient) => recipient.email)
@@ -223,6 +235,7 @@ async function internalEndMeeting(meetingId) {
       if (p.isActive) {
         p.isActive = false;
         p.lastActiveAt = meeting.endTime;
+        p.leftAt = meeting.endTime;
       }
     });
     await generateAttendance(meeting);
@@ -254,6 +267,7 @@ async function generateAttendance(meeting) {
     email: p.email,
     status: p.joinedAt ? "Present" : "Absent",
     joinedAt: p.joinedAt || null,
+    leftAt: p.leftAt || (p.isActive ? meeting.endTime || null : p.lastActiveAt || null),
   }));
 }
 
@@ -293,9 +307,11 @@ async function generatePDF(meeting) {
 
   const filePath = path.join(uploadsDir, `${meeting._id}.pdf`);
 
+  const chromeExecutablePath = resolveChromeExecutablePath();
   const launchOptions = {
     headless: "new",
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    ...(chromeExecutablePath ? { executablePath: chromeExecutablePath } : {}),
   };
 
   const browser = await puppeteer.launch(launchOptions);
@@ -303,10 +319,17 @@ async function generatePDF(meeting) {
     const page = await browser.newPage();
     const apiBase = process.env.PUBLIC_API_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 
-    // We use a simplified MOM object for the template
+    const momDoc = await Mom.findOne({
+      meetingId: meeting._id,
+      workspaceId: meeting.workspaceId,
+    }).populate("attachments");
+
+    const momPayload = momDoc ? momDoc.toObject() : {};
+    const mergedMom = { ...(meeting.mom || {}), ...momPayload };
+
     const html = buildMomHtml({
       meeting,
-      mom: meeting.mom,
+      mom: mergedMom,
       baseUrl: apiBase
     });
 
@@ -320,8 +343,10 @@ async function generatePDF(meeting) {
     fs.writeFileSync(filePath, pdfBuffer);
     meeting.pdfUrl = `/uploads/${meeting._id}.pdf`;
     console.log(`[Lifecycle] 📄 PDF generated and saved to ${meeting.pdfUrl}`);
+    return true;
   } catch (err) {
     console.error(`[Lifecycle] ❌ PDF Generation failed:`, err.message);
+    return false;
   } finally {
     await browser.close();
   }
@@ -482,7 +507,11 @@ const createMeeting = asyncHandler(async (req, res) => {
   const invitedParticipants = meeting.participants.filter(
     (participant) => participant.email !== normalizeEmail(req.user.email)
   );
-  const inviteResult = await sendInvitations({ meeting, participants: invitedParticipants });
+  const inviteResult = await sendInvitations({
+    meeting,
+    participants: invitedParticipants,
+    cc: getInviteCcList(req),
+  });
 
   res.status(201).json({
     ...meeting.toObject(),
@@ -568,7 +597,11 @@ const updateMeeting = asyncHandler(async (req, res) => {
         participant.email !== normalizeEmail(req.user.email) && !previousEmails.has(participant.email)
     );
     if (newParticipants.length) {
-      await sendInvitations({ meeting, participants: newParticipants });
+      await sendInvitations({
+        meeting,
+        participants: newParticipants,
+        cc: getInviteCcList(req),
+      });
     }
   }
 
@@ -673,7 +706,11 @@ const inviteParticipants = asyncHandler(async (req, res) => {
 
   await meeting.save();
 
-  const inviteResult = await sendInvitations({ meeting, participants: participantsToInvite });
+  const inviteResult = await sendInvitations({
+    meeting,
+    participants: participantsToInvite,
+    cc: getInviteCcList(req),
+  });
 
   res.json({
     message: `${participantsToInvite.length} participant(s) invited`,
@@ -723,10 +760,12 @@ const joinMeeting = asyncHandler(async (req, res) => {
 
   participant.status = "joined";
   participant.rsvp = "yes";
-  participant.joinedAt = new Date();
+  participant.joinedAt = participant.joinedAt || new Date();
+  participant.lastJoinedAt = new Date();
   participant.invitationAcceptedAt = participant.invitationAcceptedAt || new Date();
   participant.isActive = true;
   participant.lastActiveAt = new Date();
+  participant.leftAt = undefined;
   await meeting.save();
 
   res.json({
@@ -751,6 +790,7 @@ const leaveMeeting = asyncHandler(async (req, res) => {
   if (participant) {
     participant.isActive = false;
     participant.lastActiveAt = new Date();
+    participant.leftAt = new Date();
     await meeting.save();
   }
 
@@ -817,9 +857,12 @@ const acceptPublicMeetingInvite = asyncHandler(async (req, res) => {
 
   participant.status = "joined";
   participant.rsvp = "yes";
-  participant.joinedAt = new Date();
+  participant.joinedAt = participant.joinedAt || new Date();
+  participant.lastJoinedAt = new Date();
   participant.invitationAcceptedAt = new Date();
   participant.lastActiveAt = new Date();
+  participant.isActive = true;
+  participant.leftAt = undefined;
 
   await meeting.save();
 
@@ -881,15 +924,28 @@ const testLifecycle = asyncHandler(async (req, res) => {
 const downloadPdf = asyncHandler(async (req, res) => {
   const meeting = await Meeting.findById(req.params.id);
 
-  if (!meeting || !meeting.pdfUrl) {
-    return res.status(404).json({ message: "PDF not found" });
+  if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+  const forceRegen = String(req.query.regen || "").toLowerCase();
+  const shouldRegen = forceRegen === "1" || forceRegen === "true" || forceRegen === "yes";
+
+  if (
+    shouldRegen ||
+    !meeting.pdfUrl ||
+    !fs.existsSync(path.join(__dirname, "..", meeting.pdfUrl))
+  ) {
+    const ok = await generatePDF(meeting);
+    if (ok) {
+      await meeting.save();
+    }
   }
+
+  if (!meeting.pdfUrl) return res.status(404).json({ message: "PDF not found" });
 
   const filePath = path.join(__dirname, "..", meeting.pdfUrl);
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ message: "File not found on disk" });
-  }
+  if (!fs.existsSync(filePath)) return res.status(404).json({ message: "File not found on disk" });
 
+  res.setHeader("Cache-Control", "no-store, max-age=0");
   res.sendFile(filePath);
 });
 

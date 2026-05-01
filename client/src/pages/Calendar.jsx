@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import API from "../api/api";
-import MeetingModal from "../components/MeetingModal";
 import { meetingToCalendarEvent } from "../utils/meetingUtils";
 import CalendarView from "../components/calendar/CalendarView";
 import MeetingDetailPanel from "../components/calendar/MeetingDetailPanel";
@@ -10,11 +8,7 @@ import MeetingDetailPanel from "../components/calendar/MeetingDetailPanel";
 const MEETINGS_QUERY_KEY = ["meetings"];
 
 export default function Calendar() {
-  const queryClient = useQueryClient();
-  const [createDate, setCreateDate] = useState("");
   const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [editingMeeting, setEditingMeeting] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const meetingsQuery = useQuery({
     queryKey: MEETINGS_QUERY_KEY,
@@ -24,40 +18,10 @@ export default function Calendar() {
     },
   });
 
-  const createMeeting = useMutation({
-    mutationFn: async (payload) => {
-      const response = await API.post("/create-meeting", payload);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Meeting created and synced to the calendar.");
-      queryClient.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY });
-      setShowCreateModal(false);
-    },
-  });
-
-  const updateMeeting = useMutation({
-    mutationFn: async ({ id, payload }) => {
-      const response = await API.patch(`/meeting/${id}`, payload);
-      return response.data;
-    },
-    onSuccess: (meeting) => {
-      toast.success("Meeting updated.");
-      queryClient.invalidateQueries({ queryKey: MEETINGS_QUERY_KEY });
-      setEditingMeeting(null);
-      setSelectedMeeting(meeting);
-    },
-  });
-
   const calendarEvents = useMemo(
     () => (meetingsQuery.data || []).map((meeting) => meetingToCalendarEvent(meeting)),
     [meetingsQuery.data]
   );
-
-  const handleDateClick = (info) => {
-    setCreateDate(info.dateStr);
-    setShowCreateModal(true);
-  };
 
   const handleEventClick = (info) => {
     setSelectedMeeting(info.event.extendedProps.meeting);
@@ -65,11 +29,6 @@ export default function Calendar() {
 
   const handleCloseDetails = () => {
     setSelectedMeeting(null);
-  };
-
-  const handleEditMeeting = (meeting) => {
-    setEditingMeeting(meeting);
-    setShowCreateModal(true);
   };
 
   return (
@@ -83,16 +42,6 @@ export default function Calendar() {
 
             </p>
           </div>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => {
-              setCreateDate(new Date().toISOString().slice(0, 10));
-              setShowCreateModal(true);
-            }}
-          >
-            Schedule meeting
-          </button>
         </div>
 
         {/* Main Layout Grid */}
@@ -110,7 +59,6 @@ export default function Calendar() {
               ) : (
                 <CalendarView
                   events={calendarEvents}
-                  onDateClick={handleDateClick}
                   onEventClick={handleEventClick}
                 />
               )}
@@ -122,7 +70,6 @@ export default function Calendar() {
                 <MeetingDetailPanel
                   meeting={selectedMeeting}
                   onClose={handleCloseDetails}
-                  onEdit={handleEditMeeting}
                 />
               </div>
             )}
@@ -135,31 +82,12 @@ export default function Calendar() {
                 <MeetingDetailPanel
                   meeting={selectedMeeting}
                   onClose={handleCloseDetails}
-                  onEdit={handleEditMeeting}
                 />
               </div>
             </div>
           )}
         </div>
       </div>
-
-      <MeetingModal
-        open={showCreateModal || Boolean(editingMeeting)}
-        onClose={() => {
-          setShowCreateModal(false);
-          setEditingMeeting(null);
-        }}
-        initialDate={createDate}
-        meeting={editingMeeting}
-        isSubmitting={createMeeting.isPending || updateMeeting.isPending}
-        onSubmit={async (payload) => {
-          if (editingMeeting?._id) {
-            await updateMeeting.mutateAsync({ id: editingMeeting._id, payload });
-            return;
-          }
-          await createMeeting.mutateAsync(payload);
-        }}
-      />
     </div>
   );
 }

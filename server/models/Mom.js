@@ -3,9 +3,13 @@ const mongoose = require("mongoose");
 const attendeeSchema = new mongoose.Schema({
   srNo: { type: String, default: "" },
   name: { type: String, default: "" },
+  email: { type: String, default: "" },
   designation: { type: String, default: "" },
   department: { type: String, default: "" },
-  status: { type: String, enum: ["Present", "Absent", "Excused"], default: "Present" }
+  status: { type: String, enum: ["Present", "Absent", "Excused", "Late"], default: "Present" },
+  joinedAt: { type: Date },
+  leftAt: { type: Date },
+  durationMinutes: { type: Number },
 }, { _id: false });
 
 const absenteeSchema = new mongoose.Schema({

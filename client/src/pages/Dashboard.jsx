@@ -88,7 +88,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div className="page-card page-card-hover p-5">
                 <div className="text-sm text-gray-600">Total meetings</div>
                 <div className="mt-2 text-3xl font-bold">{stats.total}</div>
@@ -101,9 +101,6 @@ export default function Dashboard() {
                 <div className="text-sm text-gray-600">Scheduled</div>
                 <div className="mt-2 text-3xl font-bold">{stats.scheduled}</div>
               </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="page-card page-card-hover p-5">
                 <div className="text-sm text-gray-600">Action items pending</div>
                 <div className="mt-2 text-3xl font-bold">{actionSummary.pending}</div>

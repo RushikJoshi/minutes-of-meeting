@@ -48,6 +48,10 @@ export default function AppLayout() {
   const [showNotifs, setShowNotifs] = useState(false);
   const notifRef = useRef(null);
 
+  // User menu
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
+
   const fetchNotifications = async () => {
     try {
       const res = await API.get("/notifications", { params: { limit: 10 } });
@@ -67,6 +71,9 @@ export default function AppLayout() {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifs(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -160,7 +167,7 @@ export default function AppLayout() {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_58%)]" />
       <div className="pointer-events-none absolute right-0 top-28 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
       {/* Mobile Menu Overlay */}
@@ -353,8 +360,33 @@ export default function AppLayout() {
                 </div>
 
                 {/* User Avatar */}
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {(user?.name || user?.email)?.charAt(0).toUpperCase()}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowUserMenu((v) => !v)}
+                    className="w-9 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-white/70 hover:brightness-110 transition"
+                    aria-label="User menu"
+                  >
+                    {(user?.name || user?.email)?.charAt(0).toUpperCase()}
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-3 w-72 rounded-2xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden">
+                      <div className="p-4 bg-slate-50/70 border-b border-slate-100">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Logged in as</p>
+                        <p className="mt-1 text-sm font-bold text-slate-900 break-words">{user?.email || "-"}</p>
+                      </div>
+                      <div className="p-2">
+                        <button
+                          type="button"
+                          onClick={logout}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 text-red-700 font-bold text-sm hover:bg-red-100 transition border border-red-100"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -362,7 +394,7 @@ export default function AppLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="min-h-[calc(100vh-73px)]">
+        <main className="h-[calc(100vh-73px)] overflow-y-auto">
           <Outlet />
         </main>
       </div>

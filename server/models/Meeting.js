@@ -13,6 +13,8 @@ const participantSchema = new mongoose.Schema(
     invitationSentAt: { type: Date },
     invitationAcceptedAt: { type: Date },
     joinedAt: { type: Date },
+    lastJoinedAt: { type: Date },
+    leftAt: { type: Date },
     isActive: { type: Boolean, default: false },
     lastActiveAt: { type: Date },
   },

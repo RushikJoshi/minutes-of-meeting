@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 export default function VisitorFormPublic() {
   const { token, name: nameParam } = useParams();
   const navigate = useNavigate();
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const [validationStatus, setValidationStatus] = useState("loading"); // loading, valid, invalid
   const [errorMsg, setErrorMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -33,7 +34,20 @@ export default function VisitorFormPublic() {
   const [submitting, setSubmitting] = useState(false);
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
+  const cameraFileInputRef = useRef(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+
+  const localhostUrl = `${window.location.protocol}//localhost${window.location.port ? `:${window.location.port}` : ""}${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+  useEffect(() => {
+    // Desktop webcam requires HTTPS OR localhost. When the form is opened via LAN IP (HTTP),
+    // automatically switch to the same path on localhost so camera works like before.
+    const host = window.location.hostname;
+    const isLocalHost = host === "localhost" || host === "127.0.0.1";
+    if (!isMobile && !window.isSecureContext && !isLocalHost) {
+      window.location.replace(localhostUrl);
+    }
+  }, [isMobile, localhostUrl]);
 
   useEffect(() => {
     async function validateQRToken() {
@@ -90,6 +104,18 @@ export default function VisitorFormPublic() {
       reader.onloadend = () => {
         setFormData((prev) => ({ ...prev, photoUrl: reader.result }));
         toast.success("Photo Selected from Gallery!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, photoUrl: reader.result }));
+        toast.success("Photo Captured!");
       };
       reader.readAsDataURL(file);
     }
@@ -286,12 +312,28 @@ export default function VisitorFormPublic() {
                 <div className="flex justify-center gap-2">
                   {!cameraOpen ? (
                     <>
-                      <button type="button" onClick={() => setCameraOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // `getUserMedia` requires HTTPS (localhost is treated as secure).
+                          if (window.isSecureContext) setCameraOpen(true);
+                          else cameraFileInputRef.current?.click();
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+                      >
                         <Camera className="w-3 h-3" /> Camera
                       </button>
                       <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
                         <Share2 className="w-3 h-3" /> Gallery
                       </button>
+                      <input
+                        type="file"
+                        ref={cameraFileInputRef}
+                        onChange={handleCameraFileChange}
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                      />
                       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                     </>
                   ) : (

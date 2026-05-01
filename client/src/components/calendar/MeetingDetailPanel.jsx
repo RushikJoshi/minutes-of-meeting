@@ -82,9 +82,11 @@ export default function MeetingDetailPanel({ meeting, onClose, onEdit }) {
       {/* Footer Actions */}
       <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2">
-          <button type="button" className="btn-secondary !text-xs !py-1.5 !px-3" onClick={() => onEdit?.(meeting)}>
-            Edit
-          </button>
+          {onEdit ? (
+            <button type="button" className="btn-secondary !text-xs !py-1.5 !px-3" onClick={() => onEdit(meeting)}>
+              Edit
+            </button>
+          ) : null}
           <Link className="btn-primary !text-xs !py-1.5 !px-3" to={`/meeting/${meeting._id}`}>
             View Full
           </Link>

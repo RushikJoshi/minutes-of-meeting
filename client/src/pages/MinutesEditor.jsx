@@ -26,6 +26,9 @@ export default function MinutesEditor() {
       queryClient.invalidateQueries({ queryKey: ["action-items"] });
       queryClient.invalidateQueries({ queryKey: ["meetings"] });
     },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to save MOM.");
+    },
   });
 
   const uploadImage = useMutation({
@@ -90,24 +93,51 @@ export default function MinutesEditor() {
             <button
               type="button"
               className="btn-primary !bg-white !text-blue-600 hover:!bg-blue-50"
-              onClick={() => {
-                console.log("[MinutesEditor] Publish button clicked", { htmlLength: editorHtml.length });
-                saveMinutes.mutate({ 
-                  contentHtml: editorHtml || "<p></p>", 
-                  docStatus: "published",
-                  actionItems: allActionItems,
-                  summary: mom?.summary,
-                  decisions: mom?.decisions,
-                  isManual: true 
-                });
+              onClick={async () => {
+                try {
+                  console.log("[MinutesEditor] Publish button clicked", { htmlLength: editorHtml.length });
+                  await saveMinutes.mutateAsync({ 
+                    contentHtml: editorHtml || "<p></p>", 
+                    docStatus: "published",
+                    actionItems: allActionItems,
+                    summary: mom?.summary,
+                    decisions: mom?.decisions,
+                    isManual: true,
+                  });
+                  toast.success("MOM published.");
+                } catch (err) {
+                  toast.error(err?.response?.data?.message || "Failed to publish MOM.");
+                }
               }}
               disabled={saveMinutes.isPending}
             >
               Publish current MOM
             </button>
-            <a className="btn-primary" href={`${API.defaults.baseURL}/meeting/${id}/download-pdf`} target="_blank" rel="noreferrer">
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={saveMinutes.isPending}
+              onClick={async () => {
+                try {
+                  // Ensure latest editor + side-panel fields are persisted before export.
+                  await saveMinutes.mutateAsync({
+                    contentHtml: editorHtml || mom?.contentHtml || "<p></p>",
+                    docStatus: mom?.docStatus || "draft",
+                    actionItems: allActionItems,
+                    summary: mom?.summary,
+                    decisions: mom?.decisions,
+                    isManual: true,
+                  });
+
+                  const url = `${API.defaults.baseURL}/meeting/${id}/download-pdf?regen=1&t=${Date.now()}`;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                } catch (err) {
+                  toast.error(err?.response?.data?.message || "Failed to export PDF.");
+                }
+              }}
+            >
               Download PDF
-            </a>
+            </button>
           </div>
         </div>
 
@@ -119,15 +149,20 @@ export default function MinutesEditor() {
             saving={saveMinutes.isPending}
             onSave={async (contentHtml, isManual) => {
               console.log("[MinutesEditor] onSave triggered", { isManual, length: contentHtml?.length });
-              const result = await saveMinutes.mutateAsync({ 
-                contentHtml, 
-                docStatus: mom?.docStatus || "draft",
-                actionItems: allActionItems,
-                summary: mom?.summary,
-                decisions: mom?.decisions,
-                isManual 
-              });
-              setLastSavedMom(result?.mom || null);
+              try {
+                const result = await saveMinutes.mutateAsync({ 
+                  contentHtml, 
+                  docStatus: mom?.docStatus || "draft",
+                  actionItems: allActionItems,
+                  summary: mom?.summary,
+                  decisions: mom?.decisions,
+                  isManual,
+                });
+                setLastSavedMom(result?.mom || null);
+                if (isManual) toast.success("Saved.");
+              } catch (err) {
+                toast.error(err?.response?.data?.message || "Save failed.");
+              }
             }}
             onContentChange={(html) => setEditorHtml(html)}
             onDetectedActionItems={(items) => setRealtimeActionItems(items)}
@@ -147,7 +182,7 @@ export default function MinutesEditor() {
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Key Highlights</div>
+              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Extra Details (WordPad)</div>
               <div className="mt-4 space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-slate-400">Executive Summary</label>
