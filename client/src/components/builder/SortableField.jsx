@@ -33,7 +33,7 @@ export function SortableField({ id, label, type, onRemove, onChange }) {
           onClick={(e) => e.stopPropagation()}
           placeholder="Field label..."
         />
-        <div className="text-[9px] text-slate-400 font-black uppercase tracking-wider mt-0.5">{type}</div>
+        <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{type}</div>
       </div>
       <button
         onClick={(e) => { e.stopPropagation(); onRemove && onRemove(); }}

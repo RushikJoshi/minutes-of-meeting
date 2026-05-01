@@ -19,7 +19,7 @@ const STATUS_CONFIG = {
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${cfg.color}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest border ${cfg.color}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
       {cfg.label}
     </span>
@@ -33,7 +33,7 @@ function StatCard({ label, value, icon: Icon, color }) {
         <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-2xl font-black text-slate-900">{value}</p>
+        <p className="text-2xl font-semibold text-slate-900">{value}</p>
         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</p>
       </div>
     </div>
@@ -174,11 +174,11 @@ export default function ReceptionistDashboard() {
 
       {/* Navbar */}
       <nav className="bg-slate-900 text-white shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="w-full px-4 sm:px-6 lg:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center font-black text-lg shadow-lg">R</div>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center font-semibold text-lg shadow-lg">R</div>
             <div>
-              <h1 className="text-xl font-black tracking-tight">Reception Console</h1>
+              <h1 className="text-xl font-semibold tracking-tight">Reception Console</h1>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Security & Visitor Management</p>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function ReceptionistDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto w-full px-6 py-6 flex-1 space-y-6">
+      <div className="w-full px-4 sm:px-6 lg:px-6 py-6 flex-1 space-y-6">
 
         {/* Live Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -226,7 +226,7 @@ export default function ReceptionistDashboard() {
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition ${activeFilter === f ? "bg-blue-600 text-white shadow" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition ${activeFilter === f ? "bg-blue-600 text-white shadow" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
                   >
                     {f === "ALL" ? `All (${visitors.length})` : f.replace("_", " ")}
                   </button>
@@ -264,7 +264,7 @@ export default function ReceptionistDashboard() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition truncate">{v.name}</h4>
                       {v.entryCode && (
-                        <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest shrink-0">
+                        <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-lg text-[10px] font-semibold tracking-widest shrink-0">
                           {v.entryCode}
                         </span>
                       )}
@@ -319,11 +319,11 @@ export default function ReceptionistDashboard() {
 
                     {/* Name & Entry Code */}
                     <div>
-                      <h3 className="text-xl font-black text-slate-900">{selectedVisitor.name}</h3>
+                      <h3 className="text-xl font-semibold text-slate-900">{selectedVisitor.name}</h3>
                       {selectedVisitor.entryCode && (
                         <div className="mt-2 inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl">
-                          <span className="text-[10px] font-black text-blue-400 uppercase">Entry Code</span>
-                          <span className="text-lg font-black text-blue-700 tracking-[0.2em]">{selectedVisitor.entryCode}</span>
+                          <span className="text-[10px] font-semibold text-blue-400 uppercase">Entry Code</span>
+                          <span className="text-lg font-semibold text-blue-700 tracking-[0.2em]">{selectedVisitor.entryCode}</span>
                         </div>
                       )}
                     </div>
@@ -342,7 +342,7 @@ export default function ReceptionistDashboard() {
                         <div key={label} className={`p-2.5 bg-slate-50 rounded-xl border border-slate-100 ${span ? "col-span-2" : ""}`}>
                           <div className="flex items-center gap-1 mb-1">
                             <Icon className="w-3 h-3 text-slate-400" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">{label}</span>
                           </div>
                           <p className="font-bold text-slate-800 text-xs leading-tight">{value || "—"}</p>
                         </div>
@@ -351,7 +351,7 @@ export default function ReceptionistDashboard() {
 
                     {/* Timeline */}
                     <div className="bg-slate-50 rounded-xl border border-slate-100 p-4">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Visit Timeline</p>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Visit Timeline</p>
                       <div className="space-y-2">
                         {getTimeline(selectedVisitor).map(({ label, time, done, icon: Icon }, i) => (
                           <div key={i} className="flex items-center gap-3">
@@ -374,7 +374,7 @@ export default function ReceptionistDashboard() {
                       {selectedVisitor.status === "APPROVED" && (
                         <button
                           onClick={() => handleAction(selectedVisitor._id, "check-in")}
-                          className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 text-sm"
+                          className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition shadow-lg shadow-emerald-100 text-sm"
                         >
                           <LogIn className="w-4 h-4" /> CHECK IN
                         </button>
@@ -382,20 +382,20 @@ export default function ReceptionistDashboard() {
                       {selectedVisitor.status === "CHECKED_IN" && (
                         <button
                           onClick={() => handleAction(selectedVisitor._id, "check-out")}
-                          className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-100 text-sm"
+                          className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-100 text-sm"
                         >
                           <LogOut className="w-4 h-4" /> CHECK OUT
                         </button>
                       )}
                       {(selectedVisitor.status === "CHECKED_OUT") && (
-                        <div className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl font-black flex items-center justify-center gap-2 text-sm">
+                        <div className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4" /> VISIT COMPLETED
                         </div>
                       )}
                       {(selectedVisitor.status === "PENDING" || selectedVisitor.status === "APPROVED") && (
                         <button
                           onClick={() => handleReject(selectedVisitor._id)}
-                          className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-black flex items-center justify-center gap-2 hover:bg-red-100 transition text-sm"
+                          className="w-full py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-red-100 transition text-sm"
                         >
                           <XCircle className="w-4 h-4" /> REJECT VISITOR
                         </button>
@@ -405,13 +405,13 @@ export default function ReceptionistDashboard() {
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => shareWhatsApp(selectedVisitor)}
-                          className="py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-black flex items-center justify-center gap-1.5 hover:bg-green-100 transition text-xs"
+                          className="py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-semibold flex items-center justify-center gap-1.5 hover:bg-green-100 transition text-xs"
                         >
                           <MessageCircle className="w-4 h-4" /> WhatsApp
                         </button>
                         <button
                           onClick={() => downloadPass(selectedVisitor)}
-                          className="py-2.5 bg-slate-900 text-white rounded-xl font-black flex items-center justify-center gap-1.5 hover:bg-slate-700 transition text-xs"
+                          className="py-2.5 bg-slate-900 text-white rounded-xl font-semibold flex items-center justify-center gap-1.5 hover:bg-slate-700 transition text-xs"
                         >
                           <FileDown className="w-4 h-4" /> Download Pass
                         </button>
@@ -421,11 +421,11 @@ export default function ReceptionistDashboard() {
                     {/* Timing row */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
-                        <p className="text-[9px] font-black text-emerald-500 uppercase mb-1">Check-In</p>
+                        <p className="text-[9px] font-semibold text-emerald-500 uppercase mb-1">Check-In</p>
                         <p className="font-bold text-emerald-800">{selectedVisitor.inTime ? new Date(selectedVisitor.inTime).toLocaleTimeString() : "—"}</p>
                       </div>
                       <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-100">
-                        <p className="text-[9px] font-black text-blue-500 uppercase mb-1">Check-Out</p>
+                        <p className="text-[9px] font-semibold text-blue-500 uppercase mb-1">Check-Out</p>
                         <p className="font-bold text-blue-800">{selectedVisitor.outTime ? new Date(selectedVisitor.outTime).toLocaleTimeString() : "—"}</p>
                       </div>
                     </div>

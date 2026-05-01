@@ -41,4 +41,18 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// If the stored workspace id is stale (user has no access), clear it so the
+// backend can fall back to the user's first membership on subsequent requests.
+API.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status;
+    const message = String(error?.response?.data?.message || "");
+    if (status === 403 && message.toLowerCase().includes("workspace")) {
+      localStorage.removeItem(WS_KEY);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default API;

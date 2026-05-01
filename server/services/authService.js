@@ -45,6 +45,17 @@ async function login({ email, password }) {
     throw err;
   }
 
+  // Backfill default workspace/membership for legacy users that were created
+  // without a workspace (pre multi-workspace support).
+  const existingMembership = await Membership.findOne({ userId: user._id });
+  if (!existingMembership) {
+    const ws = await Workspace.create({
+      name: user.name ? `${user.name}'s Workspace` : "My Workspace",
+      createdBy: user._id,
+    });
+    await Membership.create({ workspaceId: ws._id, userId: user._id, role: "owner" });
+  }
+
   const token = signAccessToken(user._id);
   return { user: sanitizeUser(user), token };
 }

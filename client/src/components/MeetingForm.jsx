@@ -110,7 +110,7 @@ export default function MeetingForm({
       {showHeader ? (
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">{computedTitle}</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{computedTitle}</h2>
             <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
           </div>
           {onCancel ? (

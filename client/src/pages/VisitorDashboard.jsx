@@ -116,11 +116,11 @@ export default function VisitorDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto fade-up">
+      <div className="w-full fade-up">
 
         <div className="mb-10 flex items-center justify-between bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Welcome, {firstName}!</h1>
+            <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Welcome, {firstName}!</h1>
             <p className="text-slate-500 mt-1">Manage your access and view today's schedule.</p>
           </div>
           <div className="flex items-center gap-4">
@@ -151,7 +151,7 @@ export default function VisitorDashboard() {
                   <CheckCircle className="w-10 h-10 text-emerald-600" />
                 </div>
 
-                <h2 className="text-2xl font-black text-slate-900 leading-tight">Identity Verified</h2>
+                <h2 className="text-2xl font-semibold text-slate-900 leading-tight">Identity Verified</h2>
                 <p className="text-sm text-green-600 font-bold mt-2">Entry Pass Confirmed ✅</p>
 
                 {visitorLoading ? (
@@ -177,7 +177,7 @@ export default function VisitorDashboard() {
 
                     <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-full text-left">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Your Entry Code:</p>
-                      <p className="text-xl font-mono font-black text-slate-900 bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm tracking-[0.3em]">
+                      <p className="text-xl font-mono font-semibold text-slate-900 bg-white p-3 rounded-xl border border-slate-100 text-center shadow-sm tracking-[0.3em]">
                         {entryCode}
                       </p>
                     </div>
@@ -219,12 +219,12 @@ export default function VisitorDashboard() {
                       className="group flex flex-col p-5 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-purple-200 hover:shadow-xl hover:shadow-purple-50 transition-all duration-300"
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <span className="px-3 py-1 bg-white text-purple-600 text-[10px] font-black rounded-lg border border-purple-100 shadow-sm uppercase tracking-widest">
+                        <span className="px-3 py-1 bg-white text-purple-600 text-[10px] font-semibold rounded-lg border border-purple-100 shadow-sm uppercase tracking-widest">
                           Public
                         </span>
                         <div className="text-right">
                           <p className="text-xs font-bold text-slate-400">STARTS AT</p>
-                          <p className="text-sm font-black text-slate-900">
+                          <p className="text-sm font-semibold text-slate-900">
                             {m.startTime ? new Date(m.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : "--:--"}
                           </p>
                         </div>

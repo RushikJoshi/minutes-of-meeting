@@ -131,10 +131,10 @@ const VisitorForm = ({ onSuccess }) => {
               <span className="absolute right-3 top-3 text-[10px] text-blue-500 font-bold animate-pulse">Verifying...</span>
             )}
             {verificationStatus === "verified" && (
-              <span className="absolute right-3 top-2.5 text-emerald-500 text-xs font-black">✅</span>
+              <span className="absolute right-3 top-2.5 text-emerald-500 text-xs font-semibold">✅</span>
             )}
             {verificationStatus === "invalid" && (
-              <span className="absolute right-3 top-2.5 text-red-500 text-xs font-black">❌</span>
+              <span className="absolute right-3 top-2.5 text-red-500 text-xs font-semibold">❌</span>
             )}
           </div>
         </div>

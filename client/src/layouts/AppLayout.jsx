@@ -9,7 +9,7 @@ function SidebarNavItem({ to, children, icon, isCollapsed }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:scale-105 ${isActive
+        `group relative flex items-center gap-3 ${isCollapsed ? "px-0 justify-center" : "px-4"} py-3 rounded-xl transition-all duration-300 hover:scale-105 ${isActive
           ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
           : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-md"
         }`
@@ -179,118 +179,96 @@ export default function AppLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'w-16' : 'w-64'
-        } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside
+        className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? "w-14" : "w-60"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+      >
+        <div className="flex h-full flex-col min-h-0">
+          {/* Sidebar Header */}
+          <div className={`shrink-0 flex items-center border-b border-slate-200 ${sidebarCollapsed ? "justify-center p-2 h-16" : "justify-between p-4"}`}>
+            {!sidebarCollapsed && (
+              <Link to="/dashboard" className="flex items-center gap-3 group">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+                  MOM System
+                </span>
+              </Link>
+            )}
 
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          {!sidebarCollapsed && (
-            <Link to="/dashboard" className="flex items-center gap-3 group">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
-                MOM System
-              </span>
-            </Link>
-          )}
-
-          {/* Desktop Collapse Button */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden lg:block p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200 group"
-          >
-            <svg className={`w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Mobile Close Button */}
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200"
-          >
-            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          {navigationItems.map((item) => (
-            <SidebarNavItem
-              key={item.to}
-              to={item.to}
-              icon={item.icon}
-              isCollapsed={sidebarCollapsed}
-            >
-              {item.label}
-            </SidebarNavItem>
-          ))}
-        </nav>
-
-        {/* Workspace Selector */}
-        {!sidebarCollapsed && (
-          <div className="p-4 border-t border-slate-200">
-            <div className="mb-3">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                Workspace
-              </label>
-              <select
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                value={activeWorkspaceId || ""}
-                onChange={(e) => setActiveWorkspaceId(e.target.value)}
-              >
-                {workspaces.map((w) => (
-                  <option key={w.workspace._id} value={w.workspace._id}>
-                    {w.workspace.name} ({w.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            {/* Desktop Collapse Button */}
             <button
-              className="w-full mb-3 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-              onClick={async () => {
-                const name = window.prompt("Workspace name");
-                if (!name) return;
-                await createWorkspace(name);
-              }}
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden lg:block p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200 group"
             >
-              + New Workspace
+              <svg
+                className={`w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-transform duration-200 ${sidebarCollapsed ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200"
+            >
+              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        )}
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-slate-200">
-          {!sidebarCollapsed && (
-            <div className="mb-3">
-              <div className="text-sm text-slate-600">
-                <div className="font-medium text-slate-900">{user?.name || user?.email}</div>
-                <div className="text-xs">{user?.email}</div>
+          {/* Scroll Area */}
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            {/* Navigation */}
+            <nav className={`${sidebarCollapsed ? "px-2 py-4" : "p-3"} space-y-2`}>
+              {navigationItems.map((item) => (
+                <SidebarNavItem key={item.to} to={item.to} icon={item.icon} isCollapsed={sidebarCollapsed}>
+                  {item.label}
+                </SidebarNavItem>
+              ))}
+            </nav>
+
+            {/* Workspace Selector */}
+            {!sidebarCollapsed && (
+              <div className="p-3 border-t border-slate-200">
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Workspace</label>
+                  <select
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    value={activeWorkspaceId || ""}
+                    onChange={(e) => setActiveWorkspaceId(e.target.value)}
+                  >
+                    {workspaces.map((w) => (
+                      <option key={w.workspace._id} value={w.workspace._id}>
+                        {w.workspace.name} ({w.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  className="w-full mb-3 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                  onClick={async () => {
+                    const name = window.prompt("Workspace name");
+                    if (!name) return;
+                    await createWorkspace(name);
+                  }}
+                >
+                  + New Workspace
+                </button>
               </div>
-            </div>
-          )}
-
-          <button
-            onClick={logout}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 ${sidebarCollapsed ? 'justify-center' : ''
-              }`}
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {!sidebarCollapsed && <span>Logout</span>}
-          </button>
+            )}
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
-        }`}>
-
+      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-60'}`}>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 border-b border-white/60 bg-white/70 backdrop-blur-xl">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-3">
@@ -305,83 +283,94 @@ export default function AppLayout() {
                 </svg>
               </button>
 
-              {/* Desktop Spacer */}
               <div className="hidden lg:block"></div>
 
-              {/* Actions & User Info */}
               <div className="flex items-center gap-4">
-                {/* Notification Icon */}
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifs(!showNotifs)}
                     className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all relative group"
                   >
-                    <svg className="w-5 h-5 text-slate-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-slate-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                     {unreadCount > 0 && (
-                      <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                      <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse border-2 border-white">
+                        {unreadCount}
+                      </span>
                     )}
                   </button>
 
                   {showNotifs && (
-                    <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden transform origin-top-right transition-all">
-                      <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                        <h3 className="text-xs font-black text-slate-900 uppercase">Notifications</h3>
-                        <button onClick={fetchNotifications} className="text-[10px] font-black text-blue-600">Refresh</button>
+                    <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-[2rem] border border-slate-200 bg-white/95 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden animate-fade-in z-50">
+                      <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <h3 className="text-xs font-semibold text-slate-900 uppercase">Notifications</h3>
+                        <button onClick={fetchNotifications} className="text-[10px] font-semibold text-blue-600">Refresh</button>
                       </div>
-                      <div className="max-h-96 overflow-y-auto">
+                      <div className="max-h-[400px] overflow-y-auto">
                         {notifications.length > 0 ? (
-                          notifications.map(n => (
-                            <div
-                              key={n._id}
-                              onClick={() => !n.readAt && markAsRead(n._id)}
-                              className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer ${!n.readAt ? 'bg-blue-50/30' : ''}`}
-                            >
-                              <div className="flex justify-between items-start mb-1">
-                                <span className="text-[10px] font-black text-slate-900">{n.title || n.type}</span>
-                                {!n.readAt && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
+                          <div className="divide-y divide-slate-100">
+                            {notifications.map((n) => (
+                              <div
+                                key={n._id}
+                                className={`p-4 hover:bg-blue-50/50 transition-colors cursor-pointer ${!n.readAt ? 'bg-blue-50/20' : ''}`}
+                                onClick={() => markAsRead(n._id)}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${!n.readAt ? 'bg-blue-500' : 'bg-slate-300'}`} />
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-[10px] font-semibold text-slate-900">{n.title || n.type}</span>
+                                    <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
+                                    <span className="text-[9px] text-slate-400 mt-1 block">{new Date(n.createdAt).toLocaleString()}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-[10px] text-slate-600 leading-relaxed mb-2">{n.message}</p>
-                              <span className="text-[8px] font-bold text-slate-400">{new Date(n.createdAt).toLocaleString()}</span>
-                            </div>
-                          ))
+                            ))}
+                          </div>
                         ) : (
-                          <div className="p-8 text-center">
-                            <p className="text-[10px] font-bold text-slate-400">No new notifications</p>
+                          <div className="p-10 text-center text-slate-400">
+                            <svg className="w-10 h-10 mx-auto mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <p className="text-xs font-medium uppercase tracking-widest">Recent Alerts</p>
                           </div>
                         )}
-                      </div>
-                      <div className="p-3 text-center border-t border-slate-100 bg-slate-50/30">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Recent Alerts</p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* User Avatar */}
                 <div className="relative" ref={userMenuRef}>
                   <button
-                    type="button"
-                    onClick={() => setShowUserMenu((v) => !v)}
-                    className="w-9 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-white/70 hover:brightness-110 transition"
-                    aria-label="User menu"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-3 p-1.5 pr-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all group"
                   >
-                    {(user?.name || user?.email)?.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                      {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Logged in as</p>
+                      <p className="text-xs font-bold text-slate-900 leading-none">{user?.name || user?.email?.split('@')[0]}</p>
+                    </div>
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-3 w-72 rounded-2xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden">
-                      <div className="p-4 bg-slate-50/70 border-b border-slate-100">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Logged in as</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900 break-words">{user?.email || "-"}</p>
+                    <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-slate-200 bg-white/95 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden z-50">
+                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                        <p className="text-xs font-bold text-slate-900">{user?.name}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
                       </div>
                       <div className="p-2">
-                        <button
-                          type="button"
-                          onClick={logout}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 text-red-700 font-bold text-sm hover:bg-red-100 transition border border-red-100"
-                        >
+                        <Link to="/settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          Profile
+                        </Link>
+                        <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
                           Logout
                         </button>
                       </div>
@@ -393,7 +382,6 @@ export default function AppLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="h-[calc(100vh-73px)] overflow-y-auto">
           <Outlet />
         </main>

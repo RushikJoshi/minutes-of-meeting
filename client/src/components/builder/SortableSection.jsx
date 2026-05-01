@@ -30,7 +30,7 @@ export function SortableSection({ id, title, children, type, onRemove }) {
               </svg>
             </div>
             <span className="font-bold text-slate-700">{title}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-200 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 bg-slate-200 px-2 py-0.5 rounded">
               {type}
             </span>
           </div>

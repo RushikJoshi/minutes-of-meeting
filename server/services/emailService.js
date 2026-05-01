@@ -9,6 +9,12 @@ class EmailService {
     return process.env[name] || (fallbackName ? process.env[fallbackName] : "");
   }
 
+  getTimeout(name, fallbackName = "", defaultValue = 8000) {
+    const raw = this.getEnv(name, fallbackName);
+    const parsed = Number.parseInt(String(raw || ""), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultValue;
+  }
+
   getTransporter() {
     if (!this._transporter) {
       const host = this.getEnv("EMAIL_HOST", "SMTP_HOST");
@@ -17,16 +23,25 @@ class EmailService {
       const pass = this.getEnv("EMAIL_PASS", "SMTP_PASS");
       const port = parseInt(this.getEnv("EMAIL_PORT", "SMTP_PORT") || "587", 10);
       const secure = this.getEnv("EMAIL_SECURE", "SMTP_SECURE") === "true";
+      const connectionTimeout = this.getTimeout("EMAIL_CONNECTION_TIMEOUT_MS", "SMTP_CONNECTION_TIMEOUT_MS", 8000);
+      const greetingTimeout = this.getTimeout("EMAIL_GREETING_TIMEOUT_MS", "SMTP_GREETING_TIMEOUT_MS", 8000);
+      const socketTimeout = this.getTimeout("EMAIL_SOCKET_TIMEOUT_MS", "SMTP_SOCKET_TIMEOUT_MS", 10000);
 
       if (service) {
         this._transporter = nodemailer.createTransport({
           service,
           auth: { user, pass },
+          connectionTimeout,
+          greetingTimeout,
+          socketTimeout,
         });
       } else if (host) {
         this._transporter = nodemailer.createTransport({
           host, port, secure,
           auth: { user, pass },
+          connectionTimeout,
+          greetingTimeout,
+          socketTimeout,
         });
       }
     }
@@ -75,6 +90,9 @@ class EmailService {
   async sendMeetingInvitation({ meeting, recipients, cc = [] }) {
     if (!this.isConfigured()) return { sent: 0, failed: recipients?.map((r) => ({ email: r.email, error: "Email not configured" })) || [] };
     const transporter = this.getTransporter();
+    if (!transporter) {
+      return { sent: 0, failed: recipients?.map((r) => ({ email: r.email, error: "Email transport not configured" })) || [] };
+    }
 
     const list = Array.isArray(recipients) ? recipients : [];
     if (list.length === 0) return { sent: 0, failed: [] };
@@ -84,6 +102,7 @@ class EmailService {
     const safeCc = (Array.isArray(cc) ? cc : [])
       .map((v) => String(v || "").trim())
       .filter(Boolean);
+    const ccLine = safeCc.length ? safeCc.join(", ") : "";
 
     const title = meeting?.title || "Meeting";
     const agenda = meeting?.agenda || "";
@@ -92,20 +111,24 @@ class EmailService {
     const location = meeting?.location || "";
     const platform = meeting?.platform || (meetingType === "online" ? "zoom" : "offline");
     const meetingLink = meeting?.meetingLink || meeting?.link || "";
+    const hasRealMeetingLink =
+      Boolean(meetingLink) &&
+      typeof meetingLink === "string" &&
+      !meetingLink.includes("zoom.us/test") &&
+      !meetingLink.includes("zoom.us/start/videomeeting") &&
+      !meetingLink.includes("meet.google.com/new");
     const when = this.formatDateTime({ date: meeting?.startTime || meeting?.date, timezone: meeting?.timezone });
 
     const detailsLink = meeting?._id ? `${frontendBase}/meeting/${meeting._id}` : frontendBase;
 
     const subject = `Invitation: ${title}${when ? ` \u2022 ${when}` : ""}`;
 
-    const failed = [];
-    let sent = 0;
-
-    for (const recipient of list) {
+    const sendOne = async (recipient) => {
       const to = String(recipient?.email || "").trim();
-      if (!to) continue;
+      if (!to) return { skipped: true };
 
       const joinLink = recipient?.joinLink || "";
+      const hostLink = recipient?.hostLink || "";
 
       const html = `
         <div style="background:#f1f5f9; padding:24px 12px; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
@@ -123,6 +146,8 @@ class EmailService {
                 <div style="font-size:12px; letter-spacing:0.16em; text-transform:uppercase; opacity:0.9; font-weight:800;">GT MOM</div>
                 <div style="font-size:22px; font-weight:900; margin-top:8px;">You're invited: ${this.escapeHtml(title)}</div>
                 ${when ? `<div style="margin-top:8px; font-size:14px; opacity:0.95;">${this.escapeHtml(when)}${meeting?.timezone ? ` (${this.escapeHtml(meeting.timezone)})` : ""}</div>` : ""}
+                <div style="margin-top:10px; font-size:12px; opacity:0.9;"><strong>Subject:</strong> ${this.escapeHtml(subject)}</div>
+                ${ccLine ? `<div style="margin-top:8px; font-size:12px; opacity:0.9;"><strong>CC:</strong> ${this.escapeHtml(ccLine)}</div>` : ""}
               </td>
             </tr>
             <tr>
@@ -141,16 +166,19 @@ class EmailService {
                     <td class="stack" style="width:42%; vertical-align:top; padding-left:12px;">
                       <div style="font-size:12px; font-weight:900; color:#64748b; text-transform:uppercase; letter-spacing:0.14em;">Actions</div>
                       <div style="margin-top:12px;">
-                        ${joinLink ? `<a class="btn" href="${joinLink}" style="display:inline-block; background:#2563eb; color:#fff; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; box-shadow:0 10px 18px rgba(37,99,235,0.18);">Join meeting</a>` : ""}
-                        ${meetingType === "online" && meetingLink ? `<a class="btn" href="${meetingLink}" style="display:inline-block; margin-top:10px; background:#ffffff; color:#1e293b; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px solid #e2e8f0;">Open ${this.escapeHtml(platform)} link</a>` : ""}
-                        <a class="btn" href="${detailsLink}" style="display:inline-block; margin-top:10px; background:#f8fafc; color:#0f172a; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px dashed #cbd5e1;">View details</a>
+                        ${joinLink ? `<a class="btn" href="${joinLink}" style="display:inline-block; background:#2563eb; color:#fff; text-decoration:none; font-weight:900; padding:12px 14px; border-radius:12px; text-align:center; width:100%; box-shadow:0 10px 18px rgba(37,99,235,0.18);">Accept invite & join</a>` : ""}
+                        ${meetingType === "online" && hasRealMeetingLink ? `<a class="btn" href="${meetingLink}" style="display:inline-block; margin-top:10px; background:#ffffff; color:#1e293b; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px solid #e2e8f0;">Open ${this.escapeHtml(platform)} meeting link</a>` : ""}
+                        ${hostLink ? `<a class="btn" href="${hostLink}" style="display:inline-block; margin-top:10px; background:#0f172a; color:#ffffff; text-decoration:none; font-weight:900; padding:12px 14px; border-radius:12px; text-align:center; width:100%; box-shadow:0 10px 18px rgba(15,23,42,0.22);">Start as host</a>` : ""}
+                        <a class="btn" href="${detailsLink}" style="display:inline-block; margin-top:10px; background:#f8fafc; color:#0f172a; text-decoration:none; font-weight:800; padding:12px 14px; border-radius:12px; text-align:center; width:100%; border:1px dashed #cbd5e1;">View in MOM</a>
                       </div>
                     </td>
                   </tr>
                 </table>
                 <div style="margin-top:18px; padding:14px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-size:12px; color:#475569; line-height:1.6;">
-                  ${joinLink ? `<div><strong>Join link:</strong> <a href="${joinLink}" style="color:#2563eb; word-break:break-all;">${joinLink}</a></div>` : ""}
-                  ${meetingType === "online" && meetingLink ? `<div style="margin-top:8px;"><strong>Platform link:</strong> <a href="${meetingLink}" style="color:#2563eb; word-break:break-all;">${meetingLink}</a></div>` : ""}
+                  ${joinLink ? `<div><strong>Invite link:</strong> <a href="${joinLink}" style="color:#2563eb; word-break:break-all;">${joinLink}</a></div>` : ""}
+                  ${meetingType === "online" && hasRealMeetingLink ? `<div style="margin-top:8px;"><strong>Meeting link:</strong> <a href="${meetingLink}" style="color:#2563eb; word-break:break-all;">${meetingLink}</a></div>` : ""}
+                  ${hostLink ? `<div style="margin-top:8px;"><strong>Host link:</strong> <a href="${hostLink}" style="color:#2563eb; word-break:break-all;">${hostLink}</a></div>` : ""}
+                  <div style="margin-top:8px;"><strong>Details:</strong> <a href="${detailsLink}" style="color:#2563eb; word-break:break-all;">${detailsLink}</a></div>
                 </div>
               </td>
             </tr>
@@ -164,10 +192,13 @@ class EmailService {
       `;
 
       const textParts = [
+        `Subject: ${subject}`,
+        ccLine ? `CC: ${ccLine}` : "",
         `You're invited: ${title}`,
         when ? `When: ${when}${meeting?.timezone ? ` (${meeting.timezone})` : ""}` : "",
-        meetingType === "offline" ? `Location: ${location || "TBD"}` : meetingLink ? `Platform link: ${meetingLink}` : "",
-        joinLink ? `Join link: ${joinLink}` : "",
+        meetingType === "offline" ? `Location: ${location || "TBD"}` : hasRealMeetingLink ? `Meeting link: ${meetingLink}` : "",
+        joinLink ? `Invite link: ${joinLink}` : "",
+        hostLink ? `Host link: ${hostLink}` : "",
         `Details: ${detailsLink}`,
       ].filter(Boolean);
 
@@ -180,11 +211,25 @@ class EmailService {
           text: textParts.join("\n"),
           html,
         });
-        sent += 1;
+        return { sent: true, email: to };
       } catch (err) {
-        failed.push({ email: to, error: err?.message || "Failed to send" });
+        return { sent: false, email: to, error: err?.message || "Failed to send" };
       }
-    }
+    };
+
+    const outcomes = await Promise.allSettled(list.map((recipient) => sendOne(recipient)));
+    const failed = [];
+    let sent = 0;
+
+    outcomes.forEach((outcome) => {
+      const value = outcome.status === "fulfilled" ? outcome.value : { sent: false, error: outcome.reason?.message || "Failed to send" };
+      if (value?.skipped) return;
+      if (value?.sent) {
+        sent += 1;
+      } else {
+        failed.push({ email: value?.email || "", error: value?.error || "Failed to send" });
+      }
+    });
 
     return { sent, failed };
   }

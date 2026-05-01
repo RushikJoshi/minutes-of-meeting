@@ -192,7 +192,7 @@ export default function CreateMom() {
 
   return (
     <div className="page-shell bg-slate-50 min-h-screen py-8">
-      <div className="max-w-5xl mx-auto page-container-compact fade-up">
+      <div className="page-container-compact fade-up">
         
         <div className="mb-6 flex items-center justify-between">
           <Link className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2" to={`/meeting/${id}`}>
@@ -210,7 +210,7 @@ export default function CreateMom() {
           
           {/* Header */}
           <div className="bg-slate-900 text-white p-8 text-center border-b-4 border-blue-500">
-            <h1 className="text-3xl font-black mb-2">Minutes of Meeting (MOM) Report</h1>
+            <h1 className="text-3xl font-semibold mb-2">Minutes of Meeting (MOM) Report</h1>
             <p className="text-slate-300 font-medium">Official Meeting Record</p>
           </div>
 

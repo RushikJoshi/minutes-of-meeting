@@ -113,24 +113,24 @@ function ensureMeetingLink({ meetingType, platform, link }) {
   // CRITICAL: Replace ANY legacy Jitsi links with Zoom
   if (link && (link.includes("jit.si") || link.includes("jitsi"))) {
     console.log("[Platform] Replaced Jitsi link with Zoom fallback");
-    return "https://zoom.us/start/videomeeting";
+    return "";
   }
 
   if (link && link.trim()) return link;
 
-  if (meetingType === "online") {
-    if (platform === "google-meet") return "https://meet.google.com/new";
-    // Default to Zoom
-    return "https://zoom.us/start/videomeeting";
-  }
+  // Important: never return "new meeting" / "start meeting" fallbacks because that
+  // creates separate meetings per participant and can incorrectly give host privileges.
+  // If an integration didn't generate a real link, leave it blank and rely on the invite
+  // flow + organizer to provide/attach the correct platform link later.
+  if (meetingType === "online") return "";
   return "";
 }
 
 function getParticipantJoinUrl(meetingId, participant) {
   const { getPublicClientBaseUrl } = require("../utils/publicClientBase");
-  const baseUrl = getPublicClientBaseUrl() || process.env.PUBLIC_CLIENT_BASE_URL || "http://localhost:5174";
+  const baseUrl = String(getPublicClientBaseUrl() || process.env.PUBLIC_CLIENT_BASE_URL || "http://localhost:5174").replace(/\/+$/, "");
   const inviteToken = participant?.inviteToken || generateInviteToken();
-  return `${baseUrl}/join/${meetingId}?invite=${inviteToken}`;
+  return `${baseUrl}/join/${meetingId}?invite=${encodeURIComponent(inviteToken)}`;
 }
 
 function sanitizeParticipant(participant) {
@@ -184,7 +184,27 @@ async function sendInvitations({ meeting, participants, cc = [] }) {
   return result;
 }
 
+async function withTimeout(promise, timeoutMs, timeoutValue) {
+  let timeoutId;
+  const timer = new Promise((resolve) => {
+    timeoutId = setTimeout(() => resolve(timeoutValue), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timer]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 function getPublicMeetingPayload(meeting, participant) {
+  const rawMeetingLink = String(meeting?.meetingLink || meeting?.link || "").trim();
+  const safeMeetingLink =
+    rawMeetingLink.includes("zoom.us/test") ||
+    rawMeetingLink.includes("zoom.us/start/videomeeting") ||
+    rawMeetingLink.includes("meet.google.com/new")
+      ? ""
+      : rawMeetingLink;
   return {
     _id: meeting._id,
     title: meeting.title,
@@ -197,7 +217,7 @@ function getPublicMeetingPayload(meeting, participant) {
     location: meeting.location,
     type: meeting.type,
     status: meeting.status,
-    meetingLink: meeting.meetingLink || meeting.link || "",
+    meetingLink: safeMeetingLink,
     pdfUrl: meeting.pdfUrl,
     participant: participant
       ? {
@@ -370,6 +390,8 @@ const createMeeting = asyncHandler(async (req, res) => {
     location,
   } = req.body;
 
+
+
   if (!title) {
     res.status(400);
     throw new Error("title is required");
@@ -391,6 +413,7 @@ const createMeeting = asyncHandler(async (req, res) => {
 
   // Calculate endTime
   const end = new Date(start.getTime() + duration * 60000);
+  const endTime = end;
 
   console.log("Creating Meeting - Start:", start);
   console.log("Creating Meeting - End:", end);
@@ -411,6 +434,7 @@ const createMeeting = asyncHandler(async (req, res) => {
   });
 
   let meetLink = "";
+  let meetingHostLink = "";
   let googleEventId = "";
   let outlookEventId = "";
 
@@ -441,10 +465,13 @@ const createMeeting = asyncHandler(async (req, res) => {
       try {
         const zoomRes = await zoomService.createZoomMeeting({
           userId: req.user._id,
-          meeting: { title, agenda, date, startTime, endTime },
+          meeting: { title, agenda, date, startTime, endTime, duration },
         });
         if (zoomRes?.meetLink) {
           meetLink = zoomRes.meetLink;
+          if (zoomRes.hostLink) {
+            meetingHostLink = zoomRes.hostLink;
+          }
         }
       } catch (err) {
         console.warn("Zoom Sync Failed:", err.message);
@@ -501,17 +528,34 @@ const createMeeting = asyncHandler(async (req, res) => {
       googleEventId,
       googleMeetLink: googleEventId ? meetLink : "",
       outlookEventId,
+      zoomStartLink: meetingHostLink || "",
     },
   });
+
+  if (meetingHostLink) {
+    try {
+      await emailService.sendMeetingInvitation({
+        meeting,
+        recipients: [{ email: req.user.email, hostLink: meetingHostLink }],
+        cc: getInviteCcList(req),
+      });
+    } catch (err) {
+      console.warn("Host invite email failed:", err?.message || err);
+    }
+  }
 
   const invitedParticipants = meeting.participants.filter(
     (participant) => participant.email !== normalizeEmail(req.user.email)
   );
-  const inviteResult = await sendInvitations({
-    meeting,
-    participants: invitedParticipants,
-    cc: getInviteCcList(req),
-  });
+  const inviteResult = await withTimeout(
+    sendInvitations({
+      meeting,
+      participants: invitedParticipants,
+      cc: getInviteCcList(req),
+    }),
+    Number.parseInt(process.env.MEETING_INVITE_TIMEOUT_MS || "12000", 10),
+    { sent: 0, failed: invitedParticipants.map((p) => ({ email: p.email, error: "Invite sending timed out" })), timedOut: true }
+  );
 
   res.status(201).json({
     ...meeting.toObject(),
@@ -866,10 +910,18 @@ const acceptPublicMeetingInvite = asyncHandler(async (req, res) => {
 
   await meeting.save();
 
+  const rawMeetingLink = String(meeting.meetingLink || meeting.link || "").trim();
+  const safeMeetingLink =
+    rawMeetingLink.includes("zoom.us/test") ||
+    rawMeetingLink.includes("zoom.us/start/videomeeting") ||
+    rawMeetingLink.includes("meet.google.com/new")
+      ? ""
+      : rawMeetingLink;
+
   res.json({
     message: "Invite accepted successfully",
     meeting: getPublicMeetingPayload(meeting, participant),
-    meetingLink: meeting.meetingLink || meeting.link || "",
+    meetingLink: safeMeetingLink,
   });
 });
 

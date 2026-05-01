@@ -4,29 +4,29 @@ import { formatMeetingTime, participantLabel, statusTone } from "../utils/meetin
 
 export default function MeetingCard({ meeting, onEdit, onDelete }) {
   return (
-    <article className="page-card p-5 flex flex-col h-full justify-between">
+    <article className="page-card p-4 flex flex-col h-full justify-between">
       <div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase ${statusTone(meeting.status)}`}>
               {meeting.status || "scheduled"}
             </div>
-            <h2 className="mt-3 text-xl font-black tracking-tight text-slate-900 line-clamp-1" title={meeting.title}>
+            <h2 className="mt-2 text-lg font-semibold tracking-tight text-slate-900 line-clamp-1" title={meeting.title}>
               {meeting.title}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-2" title={meeting.agenda}>
+            <p className="mt-1 text-sm leading-6 text-slate-600 line-clamp-2" title={meeting.agenda}>
               {meeting.agenda || "No agenda added yet."}
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-right">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{meeting.priority || 'medium'}</div>
+          <div className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-right">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{meeting.priority || 'medium'}</div>
             <div className="mt-1 text-xs font-semibold text-slate-700">{new Date(meeting.date).toLocaleDateString()}</div>
             <div className="mt-0.5 text-[10px] text-slate-500">{formatMeetingTime(meeting)}</div>
           </div>
         </div>
 
-        <div className="mt-4">
-          <div className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">Participants</div>
+        <div className="mt-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Participants</div>
           <div className="flex flex-wrap gap-1.5">
             {(meeting.participants || []).slice(0, 5).map((participant) => (
               <span key={`${participant.email}-${participant.userId || "guest"}`} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 truncate max-w-[120px]" title={participantLabel(participant)}>
@@ -45,7 +45,7 @@ export default function MeetingCard({ meeting, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-3">
         <Link className="btn-primary !text-xs !py-1.5 !px-3" to={`/meeting/${meeting._id}`}>
           View details
         </Link>

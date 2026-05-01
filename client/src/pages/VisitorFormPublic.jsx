@@ -179,7 +179,7 @@ export default function VisitorFormPublic() {
         <div className="bg-white max-w-xl w-full rounded-3xl shadow-xl overflow-hidden border border-slate-100">
           <div className="p-10 text-center">
             <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✅</div>
-            <h1 className="text-3xl font-black text-slate-900">Form Submitted Successfully</h1>
+            <h1 className="text-3xl font-semibold text-slate-900">Form Submitted Successfully</h1>
             <p className="text-slate-500 mt-4 leading-relaxed">
               Hello <strong>{formData.name}</strong>, your visit request has been recorded.
             </p>
@@ -226,7 +226,7 @@ export default function VisitorFormPublic() {
         <div className="bg-slate-900 p-8 text-white">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-black tracking-tight">Visitor Registration</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">Visitor Registration</h2>
               <p className="text-slate-400 text-sm mt-1">Please provide accurate details for security approval.</p>
             </div>
             <div className="text-right hidden sm:block">
@@ -242,7 +242,7 @@ export default function VisitorFormPublic() {
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
           {/* Personal Info */}
           <section className="space-y-4">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <User className="w-4 h-4" /> Personal Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,7 +267,7 @@ export default function VisitorFormPublic() {
 
           {/* Meeting Details */}
           <section className="space-y-4">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Briefcase className="w-4 h-4" /> Meeting Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -292,7 +292,7 @@ export default function VisitorFormPublic() {
 
           {/* Identity & Photo */}
           <section className="space-y-6">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Camera className="w-4 h-4" /> Photo & Identity
             </h3>
 
@@ -363,7 +363,7 @@ export default function VisitorFormPublic() {
 
           <button
             disabled={submitting}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-2xl shadow-blue-200 flex items-center justify-center gap-3"
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-semibold text-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-2xl shadow-blue-200 flex items-center justify-center gap-3"
           >
             {submitting ? <RefreshCw className="w-6 h-6 animate-spin" /> : <FileCheck className="w-6 h-6" />}
             {submitting ? "Submitting..." : "Submit for Approval"}

@@ -5,10 +5,10 @@ const IntegrationToken = require("../models/IntegrationToken");
 const SCOPES = ["offline_access", "User.Read", "Calendars.ReadWrite"];
 
 function msalConfig() {
-  const clientId = process.env.MS_CLIENT_ID;
-  const clientSecret = process.env.MS_CLIENT_SECRET;
-  const tenantId = process.env.MS_TENANT_ID || "common";
-  const redirectUri = process.env.MS_REDIRECT_URI;
+  const clientId = process.env.MS_CLIENT_ID?.trim();
+  const clientSecret = process.env.MS_CLIENT_SECRET?.trim();
+  const tenantId = process.env.MS_TENANT_ID?.trim() || "common";
+  const redirectUri = process.env.MS_REDIRECT_URI?.trim();
   const missing = [];
   if (!clientId) missing.push("MS_CLIENT_ID");
   if (!clientSecret) missing.push("MS_CLIENT_SECRET");

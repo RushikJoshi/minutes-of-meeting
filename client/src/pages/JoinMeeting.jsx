@@ -55,10 +55,16 @@ export default function JoinMeeting() {
       const res = await API.post(`/join/${id}/accept`, { inviteToken });
       const meetingLink = res.data?.meetingLink || meeting?.meetingLink;
       setMeeting(res.data?.meeting || meeting);
-      setSuccess("You are marked as joined. Opening the meeting now...");
 
       if (meetingLink) {
-        window.open(meetingLink, "_blank", "noopener,noreferrer");
+        setSuccess("You are marked as joined. Redirecting to meeting...");
+        let finalLink = meetingLink;
+        if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+          finalLink = 'https://' + finalLink;
+        }
+        window.location.href = finalLink;
+      } else {
+        setSuccess("You are marked as joined, but no meeting link was found.");
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to join meeting.");
@@ -111,7 +117,7 @@ export default function JoinMeeting() {
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-white/90 text-xs font-bold uppercase tracking-widest">Secure Invite</span>
             </div>
-            <h1 className="text-2xl font-black text-white leading-tight">{meeting?.title}</h1>
+            <h1 className="text-2xl font-semibold text-white leading-tight">{meeting?.title}</h1>
             {meeting?.participant?.email && (
               <p className="text-blue-100 text-sm mt-3">
                 <a href={`mailto:${meeting.participant.email}`} className="underline decoration-blue-200/60 underline-offset-4">
@@ -126,7 +132,7 @@ export default function JoinMeeting() {
             <div className="flex items-center gap-4 p-3.5 bg-white/5 rounded-2xl border border-white/10">
               <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center text-lg">D</div>
               <div>
-                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-0.5">Date</div>
+                <div className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-0.5">Date</div>
                 <div className="text-sm font-semibold text-white">{dateStr}</div>
               </div>
             </div>
@@ -134,7 +140,7 @@ export default function JoinMeeting() {
             <div className="flex items-center gap-4 p-3.5 bg-white/5 rounded-2xl border border-white/10">
               <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-lg">T</div>
               <div>
-                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-0.5">Time</div>
+                <div className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-0.5">Time</div>
                 <div className="text-sm font-semibold text-white">
                   {meeting?.startTime || "N/A"} - {meeting?.endTime || "N/A"}
                 </div>
@@ -145,7 +151,7 @@ export default function JoinMeeting() {
               <div className="flex items-center gap-4 p-3.5 bg-white/5 rounded-2xl border border-white/10">
                 <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center text-lg">L</div>
                 <div>
-                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-0.5">Location</div>
+                  <div className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-0.5">Location</div>
                   <div className="text-sm font-semibold text-white">
                     {meeting?.type === "offline" ? meeting.location : "Online meeting"}
                   </div>
@@ -153,7 +159,7 @@ export default function JoinMeeting() {
               </div>
             )}
 
-            <div className={`text-center text-xs font-black uppercase tracking-widest px-3 py-2 rounded-full ${
+            <div className={`text-center text-xs font-semibold uppercase tracking-widest px-3 py-2 rounded-full ${
               meeting?.participant?.status === "joined"
                 ? "bg-green-500/20 text-green-300"
                 : "bg-blue-500/20 text-blue-300"

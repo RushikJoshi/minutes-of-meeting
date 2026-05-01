@@ -13,7 +13,7 @@ export default function MeetingDetailPanel({ meeting, onClose, onEdit }) {
           <div className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusTone(meeting.status)}`}>
             {meeting.status || 'scheduled'}
           </div>
-          <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">{meeting.title}</h2>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{meeting.title}</h2>
           <p className="mt-1 text-xs font-medium text-slate-500">
             {new Date(meeting.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | {formatMeetingTime(meeting)}
           </p>
@@ -34,7 +34,7 @@ export default function MeetingDetailPanel({ meeting, onClose, onEdit }) {
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Participants Avatar UI */}
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 mb-3">
             Participants ({meeting.participants?.length || 0})
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -60,7 +60,7 @@ export default function MeetingDetailPanel({ meeting, onClose, onEdit }) {
 
         {/* Agenda / Notes Placeholder */}
         <div>
-           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Agenda</h3>
+           <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 mb-3">Agenda</h3>
            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm leading-relaxed text-slate-700">
                 {meeting.agenda || "No agenda set for this meeting."}
@@ -70,7 +70,7 @@ export default function MeetingDetailPanel({ meeting, onClose, onEdit }) {
 
         {/* Action Items Placeholder */}
         <div>
-           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3">Action Items</h3>
+           <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 mb-3">Action Items</h3>
            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-center py-4 text-sm text-slate-500 italic">
                  No action items recorded yet.

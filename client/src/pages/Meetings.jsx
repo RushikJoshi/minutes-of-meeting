@@ -21,7 +21,7 @@ export default function Meetings() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const meetingsPerPage = 9;
+  const meetingsPerPage = 9; // 3x3 grid = 9 per page
 
   const meetingsQuery = useQuery({
     queryKey: MEETINGS_QUERY_KEY,
@@ -86,8 +86,8 @@ export default function Meetings() {
   };
 
   return (
-    <div className="page-shell overflow-hidden h-full flex flex-col">
-      <div className="page-container fade-up flex-1 flex flex-col min-h-0 space-y-6">
+    <div className="page-shell">
+      <div className="page-container fade-up space-y-6">
 
         {/* Header & Filters */}
         <div className="shrink-0 space-y-6">
@@ -159,12 +159,12 @@ export default function Meetings() {
         </div>
 
         {/* Grid Container */}
-        <div className="flex-1 flex flex-col justify-between overflow-hidden">
+        <div className="flex flex-col justify-between">
           {meetingsQuery.isLoading ? (
-            <div className="page-card p-8 text-sm text-slate-500 h-full flex items-center justify-center">Loading meetings...</div>
+            <div className="page-card p-8 text-sm text-slate-500 flex items-center justify-center">Loading meetings...</div>
           ) : currentMeetings.length ? (
-            <div className="flex-1">
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {currentMeetings.map((meeting) => (
                   <MeetingCard
                     key={meeting._id}
@@ -176,14 +176,14 @@ export default function Meetings() {
               </div>
             </div>
           ) : (
-            <div className="page-card p-10 text-center flex-1 flex flex-col items-center justify-center">
-              <h2 className="text-xl font-black text-slate-900">No meetings match the current filters.</h2>
+            <div className="page-card p-10 text-center flex flex-col items-center justify-center">
+              <h2 className="text-xl font-semibold text-slate-900">No meetings match the current filters.</h2>
               <p className="mt-2 text-sm text-slate-500">Try a broader search or create a new meeting.</p>
             </div>
           )}
 
           {/* Pagination UI */}
-          <div className="shrink-0 pb-4">
+          <div className="shrink-0 pt-4 pb-2">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

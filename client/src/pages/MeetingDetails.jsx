@@ -118,7 +118,7 @@ export default function MeetingDetails() {
             <div className={`mt-4 inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase ${statusTone(meeting.status)}`}>
               {meeting.status || "scheduled"}
             </div>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900">{meeting.title}</h1>
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900">{meeting.title}</h1>
             {remainingTime && (
               <div className="mt-2 text-lg font-bold text-emerald-600 animate-pulse">
                 {remainingTime}
@@ -174,7 +174,7 @@ export default function MeetingDetails() {
             <div className="page-card p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-slate-900">Participants</h2>
+                  <h2 className="text-xl font-semibold tracking-tight text-slate-900">Participants</h2>
                   <p className="mt-1 text-sm text-slate-500">Invite more people by email. Existing users are linked automatically on the backend.</p>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function MeetingDetails() {
             <div className="page-card p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-slate-900">Minutes of Meeting</h2>
+                  <h2 className="text-xl font-semibold tracking-tight text-slate-900">Minutes of Meeting</h2>
                   <p className="mt-1 text-sm text-slate-500">Rich-text MOM content is stored as HTML and feeds action-item generation automatically.</p>
                 </div>
                 <Link className="btn-primary" to={`/meeting/${meeting._id}/minutes`}>
@@ -226,7 +226,7 @@ export default function MeetingDetails() {
 
               {mom ? (
                 <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{mom.docStatus || "draft"}</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{mom.docStatus || "draft"}</div>
                   <div className="prose prose-sm mt-4 max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: mom.contentHtml || "<p>No content yet.</p>" }} />
                 </div>
               ) : (
@@ -239,7 +239,7 @@ export default function MeetingDetails() {
 
           <aside className="space-y-6">
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Actions</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</div>
               <div className="mt-4 flex flex-col gap-3">
                 <Link className="btn-secondary" to={`/meeting/${meeting._id}/minutes`}>
                   Open editor
@@ -251,7 +251,7 @@ export default function MeetingDetails() {
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Action-item status</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Action-item status</div>
               <div className="mt-4 text-sm text-slate-600">
                 Generated action items become visible on the dedicated tracker page as soon as the MOM editor is saved.
               </div>
@@ -277,7 +277,7 @@ export default function MeetingDetails() {
 function InfoTile({ label, value }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-      <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</div>
       <div className="mt-2 text-sm font-semibold text-slate-700">{value}</div>
     </div>
   );

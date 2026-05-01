@@ -83,10 +83,7 @@ export default function MinutesEditor() {
             <Link className="text-sm font-semibold text-blue-700 hover:underline" to={`/meeting/${id}`}>
               Back to meeting
             </Link>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900">{meeting.title}</h1>
-            <p className="mt-2 text-base text-slate-500">
-              Save structured minutes as HTML, auto-generate action items, and publish the MOM when it is ready.
-            </p>
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900">{meeting.title}</h1>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -141,7 +138,7 @@ export default function MinutesEditor() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <WordLikeEditor
             title="Minutes of Meeting"
             subtitle={`${new Date(meeting.date).toLocaleDateString()} | ${meeting.startTime || "Time TBD"} - ${meeting.endTime || "Time TBD"}`}
@@ -174,15 +171,15 @@ export default function MinutesEditor() {
 
           <aside className="space-y-6">
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Document status</div>
-              <div className="mt-3 text-2xl font-black tracking-tight text-slate-900">{mom?.docStatus || "draft"}</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Document status</div>
+              <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">{mom?.docStatus || "draft"}</div>
               <p className="mt-2 text-sm leading-7 text-slate-500">
                 Every save writes HTML to MongoDB and refreshes action items, meeting previews, and the PDF export path.
               </p>
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Extra Details (WordPad)</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Extra Details (WordPad)</div>
               <div className="mt-4 space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-slate-400">Executive Summary</label>
@@ -212,7 +209,7 @@ export default function MinutesEditor() {
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Generated action items</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Generated action items</div>
               <div className="mt-4 space-y-3">
                 <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                   <div className="space-y-3">
@@ -274,7 +271,7 @@ export default function MinutesEditor() {
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Meeting context</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Meeting context</div>
               <div className="mt-4 space-y-3 text-sm text-slate-600">
                 <ContextRow label="Agenda" value={meeting.agenda || "No agenda"} />
                 <ContextRow label="Participants" value={String(meeting.participants?.length || 0)} />
@@ -291,7 +288,7 @@ export default function MinutesEditor() {
 function ContextRow({ label, value }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</div>
       <div className="mt-2 font-semibold text-slate-800">{value}</div>
     </div>
   );

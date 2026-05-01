@@ -472,7 +472,9 @@ export default function WordLikeEditor({
   const fileInputId = useId();
   const autosaveTimerRef = useRef(null);
   const lastLoadedContentRef = useRef(initialContent);
+  const lastSavedHtmlRef = useRef(initialContent);
   const skipAutosaveRef = useRef(true);
+  const dirtyRef = useRef(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -509,11 +511,15 @@ export default function WordLikeEditor({
     onCreate: () => {
       setEditorReady(true);
     },
-    onUpdate: ({ editor: activeEditor }) => {
+    onUpdate: ({ editor: activeEditor, transaction }) => {
+      if (transaction && !transaction.docChanged) {
+        return;
+      }
       const html = activeEditor.getHTML();
       setCurrentHtml(html);
+      dirtyRef.current = true;
       setSaveMessage("Unsaved changes");
-      
+       
       if (onContentChange) {
         onContentChange(html);
       }
@@ -531,6 +537,8 @@ export default function WordLikeEditor({
     if (initialContent === lastLoadedContentRef.current) return;
 
     lastLoadedContentRef.current = initialContent;
+    lastSavedHtmlRef.current = initialContent;
+    dirtyRef.current = false;
     skipAutosaveRef.current = true;
     editor.commands.setContent(initialContent || "<p></p>", false);
     setCurrentHtml(initialContent || "<p></p>");
@@ -544,10 +552,20 @@ export default function WordLikeEditor({
       return undefined;
     }
 
+    if (!dirtyRef.current) return undefined;
+    const htmlToSave = editor.getHTML();
+    if (htmlToSave === lastSavedHtmlRef.current) {
+      dirtyRef.current = false;
+      return undefined;
+    }
+
     window.clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = window.setTimeout(async () => {
       try {
-        await onSave(editor.getHTML());
+        const savingHtml = editor.getHTML();
+        await onSave(savingHtml);
+        lastSavedHtmlRef.current = savingHtml;
+        dirtyRef.current = false;
         setSaveMessage(`Auto-saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
       } catch {
         setSaveMessage("Auto-save failed");
@@ -612,7 +630,10 @@ export default function WordLikeEditor({
   const handleManualSave = async () => {
     if (!editor || !onSave) return;
     try {
-      await onSave(editor.getHTML(), true);
+      const html = editor.getHTML();
+      await onSave(html, true);
+      lastSavedHtmlRef.current = html;
+      dirtyRef.current = false;
       setSaveMessage(`Saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     } catch (err) {
       console.error("[WordLikeEditor] Manual save failed", err);
@@ -636,7 +657,7 @@ export default function WordLikeEditor({
     <div className={`word-editor-shell ${isDarkMode ? "is-dark" : ""}`}>
       <div className="word-editor-header">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm opacity-70">{subtitle}</p>
         </div>
 
