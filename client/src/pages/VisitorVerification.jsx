@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  CheckCircle, XCircle, User, Briefcase, Phone, 
-  MapPin, Clock, Camera, RefreshCw, LogIn, Mail 
+import {
+  CheckCircle, XCircle, User, Briefcase, Phone,
+  MapPin, Clock, Camera, RefreshCw, LogIn, Mail
 } from "lucide-react";
 import API from "../api/api";
 import toast from "react-hot-toast";
@@ -106,7 +106,7 @@ export default function VisitorVerification() {
                 <span className="text-sm font-bold text-slate-900">{visitor.mobile}</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
               <Mail className="w-4 h-4 text-blue-500" />
               <div className="flex flex-col">

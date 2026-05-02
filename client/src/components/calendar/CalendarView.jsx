@@ -11,70 +11,114 @@ export default function CalendarView({ events, onDateClick, onEventClick }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 h-full flex flex-col calendar-wrapper">
+    <div className="bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.08)] p-8 h-full flex flex-col calendar-wrapper transition-all duration-500">
       <style>{`
-        /* Custom Tailwind-like styles for FullCalendar */
         .calendar-wrapper .fc {
-          --fc-border-color: #f1f5f9;
+          --fc-border-color: rgba(226, 232, 240, 0.5);
           --fc-button-bg-color: #ffffff;
-          --fc-button-border-color: #e2e8f0;
-          --fc-button-text-color: #475569;
+          --fc-button-border-color: transparent;
+          --fc-button-text-color: #64748b;
           --fc-button-hover-bg-color: #f8fafc;
-          --fc-button-hover-border-color: #cbd5e1;
-          --fc-button-active-bg-color: #e2e8f0;
-          --fc-button-active-border-color: #94a3b8;
+          --fc-button-hover-border-color: #e2e8f0;
+          --fc-button-active-bg-color: #0f172a;
+          --fc-button-active-border-color: #0f172a;
           --fc-event-bg-color: transparent;
           --fc-event-border-color: transparent;
-          --fc-today-bg-color: #f0f9ff;
+          --fc-today-bg-color: rgba(59, 130, 246, 0.03);
           font-family: inherit;
         }
+        .calendar-wrapper .fc-toolbar {
+          margin-bottom: 2.5rem !important;
+          padding: 0 0.5rem;
+        }
         .calendar-wrapper .fc-toolbar-title {
-          font-size: 1.25rem;
-          font-weight: 800;
+          font-size: 1.75rem;
+          font-weight: 900;
           color: #0f172a;
-          letter-spacing: -0.025em;
+          letter-spacing: -0.04em;
+          background: linear-gradient(to right, #0f172a, #334155);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
         .calendar-wrapper .fc-button {
-          font-size: 0.875rem;
-          font-weight: 600;
-          text-transform: capitalize;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          transition: all 0.2s;
-        }
-        .calendar-wrapper .fc-button-primary:not(:disabled).fc-button-active,
-        .calendar-wrapper .fc-button-primary:not(:disabled):active {
-          color: #0f172a;
-        }
-        .calendar-wrapper .fc-col-header-cell {
-          padding: 0.75rem 0;
           font-size: 0.75rem;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: #64748b;
+          border-radius: 1rem;
+          padding: 0.6rem 1.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: white;
+          border: 1px solid #f1f5f9;
+        }
+        .calendar-wrapper .fc-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          background: #f8fafc;
+          border-color: #e2e8f0;
+        }
+        .calendar-wrapper .fc-button-primary:not(:disabled).fc-button-active {
+          background-color: #0f172a !important;
+          border-color: #0f172a !important;
+          color: white !important;
+          box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.3);
+        }
+        .calendar-wrapper .fc-col-header-cell {
+          padding: 1.25rem 0;
+          font-size: 0.7rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: #94a3b8;
+          border: none;
+        }
+        .calendar-wrapper .fc-daygrid-day {
+          transition: background-color 0.2s;
+        }
+        .calendar-wrapper .fc-daygrid-day:hover {
+          background-color: rgba(248, 250, 252, 0.8);
         }
         .calendar-wrapper .fc-daygrid-day-number {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #334155;
-          padding: 0.5rem;
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #475569;
+          padding: 1rem;
+        }
+        .calendar-wrapper .fc-day-today {
+          background-color: rgba(59, 130, 246, 0.02) !important;
+        }
+        .calendar-wrapper .fc-day-today .fc-daygrid-day-number {
+          color: #2563eb;
+          position: relative;
+        }
+        .calendar-wrapper .fc-day-today .fc-daygrid-day-number::after {
+          content: '';
+          position: absolute;
+          bottom: 0.75rem;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 4px;
+          height: 4px;
+          background: #2563eb;
+          border-radius: 50%;
         }
         .calendar-wrapper .fc-event {
-          margin-top: 2px;
-          cursor: pointer;
+          margin: 3px 6px;
+          border-radius: 10px;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .calendar-wrapper .fc-more-popover {
-          border-radius: 1rem;
-          border-color: #e2e8f0;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .calendar-wrapper .fc-event:hover {
+          transform: scale(1.05) translateY(-2px);
+          box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
         }
-        .calendar-wrapper .fc-popover-header {
-          background: #f8fafc;
-          border-top-left-radius: 1rem;
-          border-top-right-radius: 1rem;
-          padding: 0.75rem 1rem;
-          font-weight: 700;
+        .calendar-wrapper .fc-scrollgrid {
+          border: none !important;
+          border-radius: 2rem;
+          overflow: hidden;
+        }
+        .calendar-wrapper .fc-theme-standard td, .calendar-wrapper .fc-theme-standard th {
+          border: 1px solid rgba(241, 245, 249, 0.8);
         }
       `}</style>
       <div className="flex-1 min-h-[600px]">
@@ -82,7 +126,7 @@ export default function CalendarView({ events, onDateClick, onEventClick }) {
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           headerToolbar={{
-            left: 'prev,next today',
+            left: 'prev,today,next',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}

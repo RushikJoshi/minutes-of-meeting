@@ -6,6 +6,13 @@ import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions/placeholder";
 import { Extension, Mark, Node, mergeAttributes } from "@tiptap/core";
 import {
+  Bold, Italic, Underline as UnderlineIcon, Type,
+  AlignLeft, AlignCenter, AlignRight,
+  List, ListOrdered, Link as LinkIcon,
+  Image as ImageIcon, Table as TableIcon,
+  Plus, Trash2, Moon, Sun, Save, CheckCircle2, AlertCircle
+} from "lucide-react";
+import {
   addColumnAfter,
   addColumnBefore,
   addRowAfter,
@@ -17,6 +24,7 @@ import {
   splitCell,
   tableEditing,
 } from "@tiptap/pm/tables";
+import { toast } from "react-hot-toast";
 
 const FONT_FAMILIES = [
   { label: "Arial", value: "Arial, sans-serif" },
@@ -39,22 +47,18 @@ function stripHtml(html) {
 }
 
 function extractActionItemsFromText(text) {
-  // Split by newlines or sentence endings
   const sentences = text
     .split(/[\n.!?]+/)
     .map((s) => s.trim())
     .filter(Boolean);
 
   const extracted = [];
-  // More flexible regex: Allow optional quotes and ignore leading/trailing punctuation/quotes
   const regex = /^\s*["']?([A-Za-z][A-Za-z.\- ]{1,50})["']?\s+will\s+(.+?)(?:\s+(?:by|before|on)\s+([A-Za-z0-9,\-/ ]+))?\s*["']?[.!?]?["']?\s*$/i;
 
   for (const sentence of sentences) {
-    console.log("[Detector] Checking sentence:", sentence);
     const match = sentence.match(regex);
     if (match) {
       const [, assignee, task, deadline] = match;
-      console.log("[Detector] Match found!", { assignee, task, deadline });
       extracted.push({
         assignedTo: assignee.trim(),
         task: task.trim(),
@@ -72,7 +76,6 @@ function styleValueToString(style, fallback = "") {
 
 function createTableNode(schema, rows = 3, cols = 3, withHeaderRow = true) {
   const rowNodes = [];
-
   for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
     const cellNodes = [];
     for (let colIndex = 0; colIndex < cols; colIndex += 1) {
@@ -86,13 +89,11 @@ function createTableNode(schema, rows = 3, cols = 3, withHeaderRow = true) {
     }
     rowNodes.push(schema.nodes.tableRow.createChecked(null, cellNodes));
   }
-
   return schema.nodes.table.createChecked(null, rowNodes);
 }
 
 const TextStyle = Mark.create({
   name: "textStyle",
-
   parseHTML() {
     return [
       {
@@ -106,7 +107,6 @@ const TextStyle = Mark.create({
       },
     ];
   },
-
   renderHTML({ HTMLAttributes }) {
     return ["span", mergeAttributes(HTMLAttributes), 0];
   },
@@ -114,7 +114,6 @@ const TextStyle = Mark.create({
 
 const FontFamily = Extension.create({
   name: "fontFamily",
-
   addGlobalAttributes() {
     return [
       {
@@ -132,7 +131,6 @@ const FontFamily = Extension.create({
       },
     ];
   },
-
   addCommands() {
     return {
       setFontFamily:
@@ -145,7 +143,6 @@ const FontFamily = Extension.create({
 
 const FontSize = Extension.create({
   name: "fontSize",
-
   addGlobalAttributes() {
     return [
       {
@@ -163,7 +160,6 @@ const FontSize = Extension.create({
       },
     ];
   },
-
   addCommands() {
     return {
       setFontSize:
@@ -176,7 +172,6 @@ const FontSize = Extension.create({
 
 const TextColor = Extension.create({
   name: "textColor",
-
   addGlobalAttributes() {
     return [
       {
@@ -194,7 +189,6 @@ const TextColor = Extension.create({
       },
     ];
   },
-
   addCommands() {
     return {
       setTextColor:
@@ -207,7 +201,6 @@ const TextColor = Extension.create({
 
 const TextAlign = Extension.create({
   name: "textAlign",
-
   addGlobalAttributes() {
     return [
       {
@@ -225,7 +218,6 @@ const TextAlign = Extension.create({
       },
     ];
   },
-
   addCommands() {
     return {
       setTextAlign:
@@ -242,7 +234,6 @@ const ImageNode = Node.create({
   draggable: true,
   selectable: true,
   atom: true,
-
   addAttributes() {
     return {
       src: { default: null },
@@ -250,11 +241,9 @@ const ImageNode = Node.create({
       title: { default: "" },
     };
   },
-
   parseHTML() {
     return [{ tag: "img[src]" }];
   },
-
   renderHTML({ HTMLAttributes }) {
     return [
       "figure",
@@ -262,7 +251,6 @@ const ImageNode = Node.create({
       ["img", mergeAttributes({ class: "word-editor-image" }, HTMLAttributes)],
     ];
   },
-
   addCommands() {
     return {
       setImage:
@@ -279,23 +267,22 @@ const Table = Node.create({
   content: "tableRow+",
   isolating: true,
   tableRole: "table",
-
   addAttributes() {
     return {
-      class: {
-        default: "word-editor-table",
+      class: { default: "word-editor-table" },
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute("style"),
+        renderHTML: attributes => (attributes.style ? { style: attributes.style } : {}),
       },
     };
   },
-
   parseHTML() {
     return [{ tag: "table" }];
   },
-
   renderHTML({ HTMLAttributes }) {
     return ["table", mergeAttributes(HTMLAttributes), 0];
   },
-
   addCommands() {
     return {
       insertTable:
@@ -308,45 +295,56 @@ const Table = Node.create({
             }
             return true;
           },
-      addColumnBefore:
-        () =>
-          ({ state, dispatch }) =>
-            addColumnBefore(state, dispatch),
-      addColumnAfter:
-        () =>
-          ({ state, dispatch }) =>
-            addColumnAfter(state, dispatch),
-      deleteColumn:
-        () =>
-          ({ state, dispatch }) =>
-            deleteColumn(state, dispatch),
-      addRowBefore:
-        () =>
-          ({ state, dispatch }) =>
-            addRowBefore(state, dispatch),
-      addRowAfter:
-        () =>
-          ({ state, dispatch }) =>
-            addRowAfter(state, dispatch),
-      deleteRow:
-        () =>
-          ({ state, dispatch }) =>
-            deleteRow(state, dispatch),
-      deleteTable:
-        () =>
-          ({ state, dispatch }) =>
-            deleteTable(state, dispatch),
-      mergeCells:
-        () =>
-          ({ state, dispatch }) =>
-            mergeCells(state, dispatch),
-      splitCell:
-        () =>
-          ({ state, dispatch }) =>
-            splitCell(state, dispatch),
+      addColumnBefore: () => ({ state, dispatch }) => { 
+        console.log("Command: addColumnBefore");
+        return addColumnBefore(state, dispatch); 
+      },
+      addColumnAfter: () => ({ state, dispatch }) => { 
+        let isInsideCell = false;
+        const { $from } = state.selection;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+            isInsideCell = true;
+            break;
+          }
+        }
+        if (!isInsideCell) return false;
+        if (dispatch) return addColumnAfter(state, dispatch);
+        return true;
+      },
+      deleteColumn: () => ({ state, dispatch }) => { 
+        return deleteColumn(state, dispatch); 
+      },
+      addRowBefore: () => ({ state, dispatch }) => { 
+        return addRowBefore(state, dispatch); 
+      },
+      addRowAfter: () => ({ state, dispatch }) => {
+        let isInsideCell = false;
+        const { $from } = state.selection;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+            isInsideCell = true;
+            break;
+          }
+        }
+        if (!isInsideCell) return false;
+        if (dispatch) return addRowAfter(state, dispatch);
+        return true;
+      },
+      deleteRow: () => ({ state, dispatch }) => { 
+        console.log("Command: deleteRow");
+        return deleteRow(state, dispatch); 
+      },
+      deleteTable: () => ({ state, dispatch }) => { 
+        console.log("Command: deleteTable");
+        return deleteTable(state, dispatch); 
+      },
+      mergeCells: () => ({ state, dispatch }) => { return mergeCells(state, dispatch); },
+      splitCell: () => ({ state, dispatch }) => { return splitCell(state, dispatch); },
     };
   },
-
   addProseMirrorPlugins() {
     return [tableEditing()];
   },
@@ -355,15 +353,17 @@ const Table = Node.create({
 const TableRow = Node.create({
   name: "tableRow",
   content: "(tableCell | tableHeader)*",
-  tableRole: "row",
-
-  parseHTML() {
-    return [{ tag: "tr" }];
+  addAttributes() {
+    return {
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute("style"),
+        renderHTML: attributes => (attributes.style ? { style: attributes.style } : {}),
+      },
+    };
   },
-
-  renderHTML({ HTMLAttributes }) {
-    return ["tr", mergeAttributes(HTMLAttributes), 0];
-  },
+  parseHTML() { return [{ tag: "tr" }]; },
+  renderHTML({ HTMLAttributes }) { return ["tr", mergeAttributes(HTMLAttributes), 0]; },
 });
 
 const TableHeader = Node.create({
@@ -371,35 +371,27 @@ const TableHeader = Node.create({
   content: "block+",
   isolating: true,
   tableRole: "header_cell",
-
   addAttributes() {
     return {
-      colspan: {
-        default: 1,
-      },
-      rowspan: {
-        default: 1,
-      },
+      colspan: { default: 1 },
+      rowspan: { default: 1 },
       colwidth: {
         default: null,
         parseHTML: (element) => {
           const width = element.getAttribute("data-colwidth");
           return width ? width.split(",").map((item) => Number(item)) : null;
         },
-        renderHTML: (attributes) => (
-          attributes.colwidth ? { "data-colwidth": attributes.colwidth.join(",") } : {}
-        ),
+        renderHTML: (attributes) => (attributes.colwidth ? { "data-colwidth": attributes.colwidth.join(",") } : {}),
+      },
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute("style"),
+        renderHTML: attributes => (attributes.style ? { style: attributes.style } : {}),
       },
     };
   },
-
-  parseHTML() {
-    return [{ tag: "th" }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ["th", mergeAttributes(HTMLAttributes), 0];
-  },
+  parseHTML() { return [{ tag: "th" }]; },
+  renderHTML({ HTMLAttributes }) { return ["th", mergeAttributes(HTMLAttributes), 0]; },
 });
 
 const TableCell = Node.create({
@@ -407,45 +399,45 @@ const TableCell = Node.create({
   content: "block+",
   isolating: true,
   tableRole: "cell",
-
   addAttributes() {
     return {
-      colspan: {
-        default: 1,
-      },
-      rowspan: {
-        default: 1,
-      },
+      colspan: { default: 1 },
+      rowspan: { default: 1 },
       colwidth: {
         default: null,
         parseHTML: (element) => {
           const width = element.getAttribute("data-colwidth");
           return width ? width.split(",").map((item) => Number(item)) : null;
         },
-        renderHTML: (attributes) => (
-          attributes.colwidth ? { "data-colwidth": attributes.colwidth.join(",") } : {}
-        ),
+        renderHTML: (attributes) => (attributes.colwidth ? { "data-colwidth": attributes.colwidth.join(",") } : {}),
+      },
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute("style"),
+        renderHTML: attributes => (attributes.style ? { style: attributes.style } : {}),
       },
     };
   },
-
-  parseHTML() {
-    return [{ tag: "td" }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ["td", mergeAttributes(HTMLAttributes), 0];
-  },
+  parseHTML() { return [{ tag: "td" }]; },
+  renderHTML({ HTMLAttributes }) { return ["td", mergeAttributes(HTMLAttributes), 0]; },
 });
 
 function ToolbarButton({ active, disabled, onClick, children, title }) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        if (onClick) onClick(e);
+      }}
+      onMouseDown={(e) => e.preventDefault()}
       title={title}
       disabled={disabled}
-      className={`word-editor-toolbar-button ${active ? "is-active" : ""}`}
+      className={`inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 ${
+        active 
+          ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110" 
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      } disabled:opacity-30 disabled:cursor-not-allowed`}
     >
       {children}
     </button>
@@ -467,6 +459,7 @@ export default function WordLikeEditor({
 }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentHtml, setCurrentHtml] = useState(initialContent);
+  const [saveStatus, setSaveStatus] = useState("ready"); // ready, saving, saved, error
   const [saveMessage, setSaveMessage] = useState("");
   const [editorReady, setEditorReady] = useState(false);
   const fileInputId = useId();
@@ -479,51 +472,23 @@ export default function WordLikeEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
-      Link.configure({
-        autolink: true,
-        openOnClick: false,
-        defaultProtocol: "https",
-      }),
-      Placeholder.configure({
-        placeholder: "Start writing MOM...",
-      }),
-      TextStyle,
-      FontFamily,
-      FontSize,
-      TextColor,
-      TextAlign,
-      ImageNode,
-      Table,
-      TableRow,
-      TableHeader,
-      TableCell,
+      Link.configure({ autolink: true, openOnClick: false, defaultProtocol: "https" }),
+      Placeholder.configure({ placeholder: "Start writing MOM..." }),
+      TextStyle, FontFamily, FontSize, TextColor, TextAlign, ImageNode, Table, TableRow, TableHeader, TableCell,
     ],
     content: initialContent,
-    editorProps: {
-      attributes: {
-        class: "word-editor-content",
-      },
-    },
-    onCreate: () => {
-      setEditorReady(true);
-    },
+    editorProps: { attributes: { class: "word-editor-content focus:outline-none min-h-[700px] py-12 px-16" } },
+    onCreate: () => setEditorReady(true),
     onUpdate: ({ editor: activeEditor, transaction }) => {
-      if (transaction && !transaction.docChanged) {
-        return;
-      }
+      if (transaction && !transaction.docChanged) return;
       const html = activeEditor.getHTML();
       setCurrentHtml(html);
       dirtyRef.current = true;
+      setSaveStatus("dirty");
       setSaveMessage("Unsaved changes");
-       
-      if (onContentChange) {
-        onContentChange(html);
-      }
-      
+      if (onContentChange) onContentChange(html);
       if (onDetectedActionItems) {
         const text = stripHtml(html);
         const items = extractActionItemsFromText(text);
@@ -535,7 +500,6 @@ export default function WordLikeEditor({
   useEffect(() => {
     if (!editor) return;
     if (initialContent === lastLoadedContentRef.current) return;
-
     lastLoadedContentRef.current = initialContent;
     lastSavedHtmlRef.current = initialContent;
     dirtyRef.current = false;
@@ -546,12 +510,10 @@ export default function WordLikeEditor({
 
   useEffect(() => {
     if (!editor || !editorReady || !autoSave || !onSave) return undefined;
-
     if (skipAutosaveRef.current) {
       skipAutosaveRef.current = false;
       return undefined;
     }
-
     if (!dirtyRef.current) return undefined;
     const htmlToSave = editor.getHTML();
     if (htmlToSave === lastSavedHtmlRef.current) {
@@ -562,137 +524,120 @@ export default function WordLikeEditor({
     window.clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = window.setTimeout(async () => {
       try {
+        setSaveStatus("saving");
         const savingHtml = editor.getHTML();
         await onSave(savingHtml);
         lastSavedHtmlRef.current = savingHtml;
         dirtyRef.current = false;
-        setSaveMessage(`Auto-saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+        setSaveStatus("saved");
+        setSaveMessage(`Last saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
       } catch {
+        setSaveStatus("error");
         setSaveMessage("Auto-save failed");
       }
     }, autoSaveDelay);
 
-    return () => {
-      window.clearTimeout(autosaveTimerRef.current);
-    };
+    return () => window.clearTimeout(autosaveTimerRef.current);
   }, [autoSave, autoSaveDelay, currentHtml, editor, editorReady, onSave]);
 
   const activeTextStyle = editor?.getAttributes("textStyle") || {};
-  const activeHeading = editor?.isActive("heading", { level: 1 })
-    ? "h1"
-    : editor?.isActive("heading", { level: 2 })
-      ? "h2"
-      : editor?.isActive("heading", { level: 3 })
-        ? "h3"
-        : "paragraph";
+  const activeHeading = editor?.isActive("heading", { level: 1 }) ? "h1" : editor?.isActive("heading", { level: 2 }) ? "h2" : editor?.isActive("heading", { level: 3 }) ? "h3" : "paragraph";
 
-  const toolbarState = useMemo(
-    () => ({
-      fontFamily: activeTextStyle.fontFamily || FONT_FAMILIES[0].value,
-      fontSize: activeTextStyle.fontSize || FONT_SIZES[1].value,
-      color: activeTextStyle.color || "#0f172a",
-      heading: activeHeading,
-    }),
-    [activeHeading, activeTextStyle.color, activeTextStyle.fontFamily, activeTextStyle.fontSize]
-  );
+  const toolbarState = useMemo(() => ({
+    fontFamily: activeTextStyle.fontFamily || FONT_FAMILIES[0].value,
+    fontSize: activeTextStyle.fontSize || FONT_SIZES[1].value,
+    color: activeTextStyle.color || "#0f172a",
+    heading: activeHeading,
+  }), [activeHeading, activeTextStyle.color, activeTextStyle.fontFamily, activeTextStyle.fontSize]);
 
   const handleInsertLink = () => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href || "";
     const url = window.prompt("Enter link URL", previousUrl);
-
     if (url === null) return;
-    if (!url.trim()) {
-      editor.chain().focus().unsetLink().run();
-      return;
-    }
-
+    if (!url.trim()) { editor.chain().focus().unsetLink().run(); return; }
     editor.chain().focus().setLink({ href: url.trim() }).run();
   };
 
   const handleImageUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !editor || !onUploadImage) return;
-
     try {
       const uploaded = await onUploadImage(file);
-      if (uploaded?.src) {
-        editor.chain().focus().setImage({ src: uploaded.src, alt: file.name, title: file.name }).run();
-      }
-      setSaveMessage(`${file.name} uploaded`);
-    } catch {
-      setSaveMessage("Image upload failed");
-    } finally {
-      event.target.value = "";
-    }
+      if (uploaded?.src) editor.chain().focus().setImage({ src: uploaded.src, alt: file.name, title: file.name }).run();
+    } catch { toast.error("Image upload failed"); } finally { event.target.value = ""; }
   };
 
   const handleManualSave = async () => {
     if (!editor || !onSave) return;
     try {
+      setSaveStatus("saving");
       const html = editor.getHTML();
       await onSave(html, true);
       lastSavedHtmlRef.current = html;
       dirtyRef.current = false;
+      setSaveStatus("saved");
       setSaveMessage(`Saved at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
-    } catch (err) {
-      console.error("[WordLikeEditor] Manual save failed", err);
-      setSaveMessage("Save failed");
-    }
+    } catch { setSaveStatus("error"); setSaveMessage("Save failed"); }
   };
 
   if (loading || !editor || !editorReady) {
     return (
-      <div className="word-editor-loading">
-        <div className="word-editor-loading-card">
-          <div className="word-editor-spinner"></div>
-          <h2 className="text-lg font-bold text-slate-900">Preparing editor</h2>
-          <p className="text-sm text-slate-500">Loading your Microsoft Word style workspace...</p>
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="page-card flex w-full max-w-md flex-col items-center gap-3 p-8 text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-r-transparent"></div>
+          <h2 className="text-lg font-bold text-slate-900">Preparing Workspace</h2>
+          <p className="text-sm text-slate-500">Loading your document editor...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`word-editor-shell ${isDarkMode ? "is-dark" : ""}`}>
-      <div className="word-editor-header">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-sm opacity-70">{subtitle}</p>
+    <div className={`word-editor-shell flex flex-col min-h-[85vh] rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-[0_32px_80px_-20px_rgba(15,23,42,0.15)] bg-white ${isDarkMode ? "is-dark" : ""}`}>
+      {/* Premium Header */}
+      <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <Save size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">{title}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              {saveStatus === "saved" && <CheckCircle2 size={14} className="text-emerald-500" />}
+              {saveStatus === "saving" && <div className="w-3 h-3 border-2 border-blue-500 border-r-transparent animate-spin rounded-full" />}
+              {saveStatus === "error" && <AlertCircle size={14} className="text-red-500" />}
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{saveMessage || "Ready to edit"}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
-            type="button"
-            onClick={() => setIsDarkMode((value) => !value)}
-            className="word-editor-utility-button"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all"
           >
-            {isDarkMode ? "Light mode" : "Dark mode"}
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           <button
-            type="button"
             onClick={handleManualSave}
             disabled={saving}
-            className="btn-primary !rounded-2xl !px-5 !py-3 text-sm"
+            className="btn-primary !px-6 !py-3 flex items-center gap-2"
           >
-            {saving ? "Saving..." : "Save Document"}
+            <Save size={18} />
+            <span>{saving ? "Saving..." : "Save Template"}</span>
           </button>
         </div>
       </div>
 
-      <div className="word-editor-toolbar">
-        <div className="word-editor-toolbar-group">
+      {/* Modern Toolbar */}
+      <div className="px-8 py-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap items-center gap-6 overflow-x-auto no-scrollbar">
+        {/* Style Group */}
+        <div className="flex items-center gap-2 pr-6 border-r border-slate-200">
           <select
             value={toolbarState.heading}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (value === "paragraph") {
-                editor.chain().focus().setParagraph().run();
-              } else {
-                editor.chain().focus().setHeading({ level: Number(value.replace("h", "")) }).run();
-              }
-            }}
-            className="word-editor-select"
+            onChange={(e) => e.target.value === "paragraph" ? editor.chain().focus().setParagraph().run() : editor.chain().focus().setHeading({ level: Number(e.target.value.replace("h", "")) }).run()}
+            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all"
           >
             <option value="paragraph">Paragraph</option>
             <option value="h1">Heading 1</option>
@@ -702,100 +647,103 @@ export default function WordLikeEditor({
 
           <select
             value={toolbarState.fontFamily}
-            onChange={(event) => editor.chain().focus().setFontFamily(event.target.value).run()}
-            className="word-editor-select"
+            onChange={(e) => editor.chain().focus().setFontFamily(e.target.value).run()}
+            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all min-w-[120px]"
           >
-            {FONT_FAMILIES.map((family) => (
-              <option key={family.value} value={family.value}>
-                {family.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={toolbarState.fontSize}
-            onChange={(event) => editor.chain().focus().setFontSize(event.target.value).run()}
-            className="word-editor-select"
-          >
-            {FONT_SIZES.map((size) => (
-              <option key={size.value} value={size.value}>
-                {size.label}
-              </option>
-            ))}
+            {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         </div>
 
-        <div className="word-editor-toolbar-group">
+        {/* Formatting Group */}
+        <div className="flex items-center gap-1 pr-6 border-r border-slate-200">
           <ToolbarButton title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
-            B
+            <Bold size={18} />
           </ToolbarButton>
           <ToolbarButton title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
-            I
+            <Italic size={18} />
           </ToolbarButton>
           <ToolbarButton title="Underline" active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()}>
-            U
+            <UnderlineIcon size={18} />
           </ToolbarButton>
-          <label className="word-editor-color-picker" title="Text color">
-            <input
-              type="color"
-              value={toolbarState.color}
-              onChange={(event) => editor.chain().focus().setTextColor(event.target.value).run()}
-            />
+          <div className="relative group">
+            <label className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer transition-all">
+              <Type size={18} />
+              <input type="color" className="absolute inset-0 opacity-0 cursor-pointer" value={toolbarState.color} onChange={(e) => editor.chain().focus().setTextColor(e.target.value).run()} />
+            </label>
+          </div>
+        </div>
+
+        {/* Alignment Group */}
+        <div className="flex items-center gap-1 pr-6 border-r border-slate-200">
+          <ToolbarButton active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+            <AlignLeft size={18} />
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+            <AlignCenter size={18} />
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+            <AlignRight size={18} />
+          </ToolbarButton>
+        </div>
+
+        {/* Lists & Links Group */}
+        <div className="flex items-center gap-1 pr-6 border-r border-slate-200">
+          <ToolbarButton active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <List size={18} />
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered size={18} />
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive("link")} onClick={handleInsertLink}>
+            <LinkIcon size={18} />
+          </ToolbarButton>
+        </div>
+
+        {/* Assets Group */}
+        <div className="flex items-center gap-1">
+          <label className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer transition-all">
+            <ImageIcon size={18} />
+            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
           </label>
-        </div>
-
-        <div className="word-editor-toolbar-group">
-          <ToolbarButton title="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
-            L
+          <ToolbarButton title="Insert Table" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
+            <TableIcon size={18} />
           </ToolbarButton>
-          <ToolbarButton title="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
-            C
+          <ToolbarButton 
+            title="Add Row" 
+            onClick={() => {
+              editor.commands.focus();
+              const success = editor.commands.addRowAfter();
+              if (!success) toast.error("Please click inside a table cell first");
+            }}
+          >
+            <Plus size={18} className="rotate-90" />
           </ToolbarButton>
-          <ToolbarButton title="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
-            R
+          <ToolbarButton 
+            title="Add Column" 
+            onClick={() => {
+              editor.commands.focus();
+              const success = editor.commands.addColumnAfter();
+              if (!success) toast.error("Please click inside a table cell first");
+            }}
+          >
+            <Plus size={18} />
           </ToolbarButton>
-        </div>
-
-        <div className="word-editor-toolbar-group">
-          <ToolbarButton title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-            • List
-          </ToolbarButton>
-          <ToolbarButton title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-            1. List
-          </ToolbarButton>
-          <ToolbarButton title="Add link" active={editor.isActive("link")} onClick={handleInsertLink}>
-            Link
-          </ToolbarButton>
-        </div>
-
-        <div className="word-editor-toolbar-group">
-          <label htmlFor={fileInputId} className="word-editor-toolbar-button cursor-pointer">
-            Image
-          </label>
-          <input id={fileInputId} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-
-          <ToolbarButton title="Insert table" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
-            Table
-          </ToolbarButton>
-          <ToolbarButton title="Add row" onClick={() => editor.chain().focus().addRowAfter().run()}>
-            Row+
-          </ToolbarButton>
-          <ToolbarButton title="Add column" onClick={() => editor.chain().focus().addColumnAfter().run()}>
-            Col+
-          </ToolbarButton>
-          <ToolbarButton title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
-            Del Table
+          <ToolbarButton 
+            title="Delete Table" 
+            onClick={() => {
+              editor.commands.focus();
+              const success = editor.commands.deleteTable();
+              if (!success) toast.error("Please click inside a table cell first");
+            }}
+          >
+            <Trash2 size={18} className="text-red-500" />
           </ToolbarButton>
         </div>
       </div>
 
-      <div className="word-editor-statusbar">
-        <span>{saveMessage || "Ready to edit"}</span>
-        <span>{autoSave ? "Auto-save on" : "Auto-save off"}</span>
-      </div>
-
-      <div className="word-editor-page-wrap">
-        <div className="word-editor-page">
+      {/* Document Area */}
+      <div className="flex-1 bg-slate-100 p-8 sm:p-12 overflow-y-auto no-scrollbar">
+        <div className="max-w-[850px] mx-auto bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-sm min-h-full border border-slate-200 transition-all duration-300 hover:shadow-[0_30px_70px_rgba(0,0,0,0.08)]">
           <EditorContent editor={editor} />
         </div>
       </div>

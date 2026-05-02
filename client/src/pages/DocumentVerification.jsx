@@ -51,7 +51,7 @@ export default function DocumentVerification() {
       if (role === "admin") navigate("/admin-dashboard", { replace: true });
       else if (role === "employee") navigate("/employee-dashboard", { replace: true });
       else navigate("/visitor-dashboard", { replace: true });
-      
+
     } catch (err) {
       toast.error(err?.response?.data?.message || "Verification error occurred. Please try again.");
     } finally {
@@ -63,9 +63,9 @@ export default function DocumentVerification() {
     <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.16),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.16),_transparent_32%)] pointer-events-none" />
       <div className="relative w-full max-w-md bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-100 fade-up">
-        
+
         {/* Back Button */}
-        <button 
+        <button
           type="button"
           onClick={() => navigate("/role-selection")}
           className="flex items-center text-sm font-semibold text-slate-500 hover:text-blue-600 mb-4 transition-colors"
@@ -109,8 +109,8 @@ export default function DocumentVerification() {
               className="input-field w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 uppercase"
               placeholder={
                 formData.documentType === "AADHAR" ? "12 Digit Aadhar Number" :
-                formData.documentType === "PAN" ? "ABCDE1234F" :
-                "DL-XXXX-XXXXXXX"
+                  formData.documentType === "PAN" ? "ABCDE1234F" :
+                    "DL-XXXX-XXXXXXX"
               }
             />
           </div>

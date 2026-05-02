@@ -245,8 +245,9 @@ async function internalEndMeeting(meetingId) {
     console.log(`[Lifecycle] 🚀 Processing end of meeting: "${meeting.title}" (${meetingId})`);
 
     meeting.status = "completed";
+    meeting.actualEndTime = new Date();
     if (!meeting.endTime) {
-      meeting.endTime = new Date();
+      meeting.endTime = meeting.actualEndTime;
     }
 
     // 1. Attendance
@@ -254,8 +255,8 @@ async function internalEndMeeting(meetingId) {
     meeting.participants.forEach(p => {
       if (p.isActive) {
         p.isActive = false;
-        p.lastActiveAt = meeting.endTime;
-        p.leftAt = meeting.endTime;
+        p.lastActiveAt = meeting.actualEndTime;
+        p.leftAt = meeting.actualEndTime;
       }
     });
     await generateAttendance(meeting);
@@ -325,7 +326,7 @@ async function generatePDF(meeting) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const filePath = path.join(uploadsDir, `${meeting._id}.pdf`);
+  const filePath = path.join(__dirname, "..", "uploads", `${meeting._id}.pdf`);
 
   const chromeExecutablePath = resolveChromeExecutablePath();
   const launchOptions = {
@@ -389,8 +390,6 @@ const createMeeting = asyncHandler(async (req, res) => {
     platform,
     location,
   } = req.body;
-
-
 
   if (!title) {
     res.status(400);
@@ -938,10 +937,12 @@ const startMeeting = asyncHandler(async (req, res) => {
   }
 
   meeting.status = "ongoing";
+  if (!meeting.actualStartTime) {
+    meeting.actualStartTime = new Date();
+  }
   await meeting.save();
 
   console.log("Meeting Started:", meeting.title);
-  console.log("End Time Remains:", meeting.endTime);
 
   res.json({
     message: "Meeting started",

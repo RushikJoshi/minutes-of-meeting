@@ -74,20 +74,28 @@ function buildAttendance(meeting) {
     },
     details: attendanceDetails
   };
+
+  return {
+    summary: {
+      total: participants.length,
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      leftEarly: leftEarlyCount,
+    },
+    details: attendanceDetails
+  };
 }
 
 /**
  * Generates structured MOM report and saves to Mom DB
  */
 async function generateMOMReport(meetingId, workspaceId, userId) {
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId });
+  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId }).populate("createdBy");
   if (!meeting) throw new Error("Meeting not found");
 
   const attendance = buildAttendance(meeting);
   const absentList = attendance.details.filter((d) => d.status === "Absent");
-
-  // Attempt to generate AI summary if notes exist
-  let aiSummary = null;
   if (meeting.notes && meeting.notes.length > 50) {
     try {
       console.log(`[AI] Summarizing meeting: ${meeting._id}`);
@@ -141,6 +149,35 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
           name: d.name,
           reason: "",
         })),
+        contentHtml: `
+          <h1 style="text-align: center;">Minutes of Meeting</h1>
+          <div style="text-align: right;">
+            <p><strong>Date of meeting:</strong> ${meeting.date ? new Date(meeting.date).toLocaleDateString() : "TBD"}</p>
+            <p><strong>Time of meeting:</strong> ${meeting.startTime ? new Date(meeting.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}</p>
+            <p><strong>From:</strong> ${meeting.createdBy?.name || "Admin"}</p>
+            <p><strong>To:</strong> ${attendance.details.map(d => d.name || d.email).join(", ")}</p>
+          </div>
+          <br/>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+            <thead>
+              <tr style="background-color: #f8fafc;">
+                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Serial Number</th>
+                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Discussion/Tasks</th>
+                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Task Complete Date</th>
+                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Responsible Person</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid #e2e8f0; padding: 12px;">1</td>
+                <td style="border: 1px solid #e2e8f0; padding: 12px;">${meeting.agenda || ""}</td>
+                <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
+                <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
+              </tr>
+            </tbody>
+          </table>
+          <p></p>
+        `
       },
       $setOnInsert: {
         createdBy: userId,

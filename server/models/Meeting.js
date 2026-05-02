@@ -42,8 +42,10 @@ const meetingSchema = new mongoose.Schema(
     agenda: { type: String, default: "" },
     description: { type: String, default: "" }, // Added
     date: { type: Date },
-    startTime: { type: Date }, // Changed to Date
-    endTime: { type: Date },   // Changed to Date
+    startTime: { type: String }, // FIXED: String for HH:mm
+    endTime: { type: String },   // FIXED: String for HH:mm
+    actualStartTime: { type: Date }, // Added
+    actualEndTime: { type: Date },   // Added
     duration: { type: Number, default: 60 }, // Added
     timezone: { type: String, default: "Asia/Kolkata" }, // Added
     priority: { type: String, enum: ["low", "medium", "high"], default: "medium" }, // Added

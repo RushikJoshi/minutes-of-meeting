@@ -163,8 +163,8 @@ class PdfService {
           <div class="grid">
             <div class="grid-item"><span class="label">Meeting Type</span><span class="value">${mom.meetingType || "-"}</span></div>
             <div class="grid-item"><span class="label">Date</span><span class="value">${dateStr}</span></div>
-            <div class="grid-item"><span class="label">Time</span><span class="value">${mom.time || meeting.startTime || "-"}</span></div>
-            <div class="grid-item"><span class="label">Duration</span><span class="value">${mom.duration || "-"}</span></div>
+            <div class="grid-item"><span class="label">Time</span><span class="value">${meeting.actualStartTime ? new Date(meeting.actualStartTime).toLocaleTimeString() : (meeting.startTime ? new Date(meeting.startTime).toLocaleTimeString() : "-")}</span></div>
+            <div class="grid-item"><span class="label">End Time</span><span class="value">${meeting.actualEndTime ? new Date(meeting.actualEndTime).toLocaleTimeString() : (meeting.endTime ? new Date(meeting.endTime).toLocaleTimeString() : "-")}</span></div>
             <div class="grid-item"><span class="label">Venue / Platform</span><span class="value">${mom.venue || meeting.location || meeting.platform || "-"}</span></div>
             <div class="grid-item"><span class="label">Called By</span><span class="value">${mom.calledBy || "-"}</span></div>
             <div class="grid-item"><span class="label">Chaired By</span><span class="value">${mom.chairedBy || "-"}</span></div>

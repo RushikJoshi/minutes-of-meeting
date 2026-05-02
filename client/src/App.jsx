@@ -26,6 +26,7 @@ import VisitorDashboard from "./pages/VisitorDashboard";
 import VisitorFormPublic from "./pages/VisitorFormPublic";
 import ReceptionistDashboard from "./pages/ReceptionistDashboard";
 import VisitorVerification from "./pages/VisitorVerification";
+import Profile from "./pages/Profile";
 import { useEffect, useState } from "react";
 import API from "./api/api";
 import { useAuth } from "./hooks/useAuth";
@@ -147,6 +148,7 @@ function App() {
             <Route path="/meeting/:id/create-mom" element={<MinutesEditor />} />
             <Route path="/meeting/:id/minutes" element={<MinutesEditor />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/action-items" element={<ActionItems />} />

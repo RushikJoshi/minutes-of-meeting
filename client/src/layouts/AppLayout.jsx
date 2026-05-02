@@ -42,6 +42,8 @@ export default function AppLayout() {
   const activeWs = workspaces.find((w) => w?.workspace?._id === activeWorkspaceId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
 
   // Notification State
   const [notifications, setNotifications] = useState([]);
@@ -253,11 +255,7 @@ export default function AppLayout() {
 
                 <button
                   className="w-full mb-3 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-                  onClick={async () => {
-                    const name = window.prompt("Workspace name");
-                    if (!name) return;
-                    await createWorkspace(name);
-                  }}
+                  onClick={() => setShowNewWorkspaceModal(true)}
                 >
                   + New Workspace
                 </button>
@@ -361,7 +359,7 @@ export default function AppLayout() {
                         <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
                       </div>
                       <div className="p-2">
-                        <Link to="/settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                        <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -386,6 +384,72 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* New Workspace Modal */}
+      {showNewWorkspaceModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowNewWorkspaceModal(false)}
+          />
+          <div className="relative w-full max-w-md page-card p-6 sm:p-8 animate-scale-up border border-slate-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900">New Workspace</h3>
+              <button
+                onClick={() => setShowNewWorkspaceModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">Workspace Name</label>
+                <input
+                  autoFocus
+                  className="input-field"
+                  placeholder="e.g. Engineering Team"
+                  value={newWorkspaceName}
+                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newWorkspaceName.trim()) {
+                      createWorkspace(newWorkspaceName.trim());
+                      setNewWorkspaceName("");
+                      setShowNewWorkspaceModal(false);
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  className="flex-1 btn-secondary"
+                  onClick={() => {
+                    setShowNewWorkspaceModal(false);
+                    setNewWorkspaceName("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!newWorkspaceName.trim()}
+                  className="flex-1 btn-primary"
+                  onClick={async () => {
+                    await createWorkspace(newWorkspaceName.trim());
+                    setNewWorkspaceName("");
+                    setShowNewWorkspaceModal(false);
+                  }}
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

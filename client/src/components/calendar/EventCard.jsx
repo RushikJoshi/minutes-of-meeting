@@ -4,40 +4,39 @@ export default function EventCard({ eventInfo }) {
   const { event } = eventInfo;
   const meeting = event.extendedProps.meeting;
   
-  // Determine category color based on meeting properties to match user's request:
-  // Internal -> blue, Client -> green, Urgent -> red, Review -> yellow
-  let categoryColor = 'bg-blue-100 text-blue-700 border-blue-200';
+  // Determine category color based on meeting properties
+  let categoryColor = 'bg-blue-50 text-blue-700 border-blue-100/50';
   let dotColor = 'bg-blue-500';
   
   if (meeting?.priority === 'high') {
-    categoryColor = 'bg-red-100 text-red-700 border-red-200';
-    dotColor = 'bg-red-500';
+    categoryColor = 'bg-rose-50 text-rose-700 border-rose-100/50';
+    dotColor = 'bg-rose-500';
   } else if (meeting?.status === 'completed') {
-    categoryColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
-    dotColor = 'bg-yellow-500';
+    categoryColor = 'bg-emerald-50 text-emerald-700 border-emerald-100/50';
+    dotColor = 'bg-emerald-500';
   } else if (meeting?.type === 'offline') {
-    categoryColor = 'bg-green-100 text-green-700 border-green-200';
-    dotColor = 'bg-green-500';
+    categoryColor = 'bg-indigo-50 text-indigo-700 border-indigo-100/50';
+    dotColor = 'bg-indigo-500';
   }
 
   // Formatting time
   let startTime = '';
   if (event.start) {
     startTime = new Date(event.start).toLocaleTimeString(undefined, { 
-      hour: '2-digit', 
+      hour: 'numeric', 
       minute: '2-digit', 
       hour12: true 
-    });
+    }).toLowerCase();
   }
 
   return (
     <div 
-      className={`flex items-center gap-1.5 overflow-hidden rounded px-1.5 py-0.5 text-xs font-medium border shadow-sm transition-colors hover:opacity-90 cursor-pointer ${categoryColor}`}
+      className={`flex items-center gap-2 overflow-hidden rounded-lg px-2 py-1 text-[10px] font-bold border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${categoryColor}`}
       title={`${event.title} ${startTime ? `(${startTime})` : ''}`}
     >
-      <div className={`h-1.5 w-1.5 flex-none rounded-full ${dotColor}`}></div>
-      {startTime && <span className="font-semibold flex-none">{startTime}</span>}
-      <span className="truncate flex-1">{event.title}</span>
+      <div className={`h-1.5 w-1.5 flex-none rounded-full animate-pulse ${dotColor}`}></div>
+      {startTime && <span className="opacity-60 flex-none">{startTime}</span>}
+      <span className="truncate flex-1 tracking-tight">{event.title}</span>
     </div>
   );
 }

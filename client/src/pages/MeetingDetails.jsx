@@ -112,12 +112,14 @@ export default function MeetingDetails() {
       <div className="page-container space-y-6 fade-up">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
+          <div className="flex items-center gap-3">
             <Link className="text-sm font-semibold text-blue-700 hover:underline" to="/meetings">
               Back to meetings
             </Link>
-            <div className={`mt-4 inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase ${statusTone(meeting.status)}`}>
+            <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase ${statusTone(meeting.status)}`}>
               {meeting.status || "scheduled"}
             </div>
+          </div>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900">{meeting.title}</h1>
             {remainingTime && (
               <div className="mt-2 text-lg font-bold text-emerald-600 animate-pulse">
@@ -137,6 +139,16 @@ export default function MeetingDetails() {
               >
                 {startMeeting.isPending ? "Starting..." : "Start Meeting"}
               </button>
+            )}
+            {meeting.type === "online" && (meeting.meetingLink || meeting.link) && (
+              <a
+                href={meeting.meetingLink || meeting.link}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary !bg-blue-600 hover:!bg-blue-700"
+              >
+                Join now
+              </a>
             )}
             <button type="button" className="btn-secondary" onClick={() => setShowEditModal(true)}>
               Edit meeting

@@ -4,8 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import API from "../api/api";
 import WordLikeEditor from "../components/editor/WordLikeEditor";
+import { getDefaultMomTemplate } from "../utils/meetingUtils";
+import { useAuth } from "../hooks/useAuth";
 
 export default function MinutesEditor() {
+  const { user } = useAuth();
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [lastSavedMom, setLastSavedMom] = useState(null);
@@ -47,12 +50,19 @@ export default function MinutesEditor() {
   const [realtimeActionItems, setRealtimeActionItems] = useState([]);
   const [editorHtml, setEditorHtml] = useState("");
 
-  // Sync editorHtml when mom loads
+  const defaultContent = useMemo(() => {
+    const isBlank = !mom?.contentHtml || /^(\s|<p>|<\/p>|<br>)*$/i.test(mom.contentHtml);
+    if (!isBlank) return mom.contentHtml;
+    if (!meeting) return "<p></p>";
+    return getDefaultMomTemplate(meeting, user?.name || "Admin");
+  }, [mom?.contentHtml, meeting, user?.name]);
+
+  // Sync editorHtml when mom loads or defaultContent changes
   useEffect(() => {
-    if (mom?.contentHtml) {
-      setEditorHtml(mom.contentHtml);
+    if (defaultContent) {
+      setEditorHtml(defaultContent);
     }
-  }, [mom?.contentHtml]);
+  }, [defaultContent]);
 
   // Merge database items and real-time items for display
   const allActionItems = useMemo(() => {
@@ -93,8 +103,8 @@ export default function MinutesEditor() {
               onClick={async () => {
                 try {
                   console.log("[MinutesEditor] Publish button clicked", { htmlLength: editorHtml.length });
-                  await saveMinutes.mutateAsync({ 
-                    contentHtml: editorHtml || "<p></p>", 
+                  await saveMinutes.mutateAsync({
+                    contentHtml: editorHtml || "<p></p>",
                     docStatus: "published",
                     actionItems: allActionItems,
                     summary: mom?.summary,
@@ -142,13 +152,13 @@ export default function MinutesEditor() {
           <WordLikeEditor
             title="Minutes of Meeting"
             subtitle={`${new Date(meeting.date).toLocaleDateString()} | ${meeting.startTime || "Time TBD"} - ${meeting.endTime || "Time TBD"}`}
-            initialContent={mom?.contentHtml || "<p></p>"}
+            initialContent={defaultContent}
             saving={saveMinutes.isPending}
             onSave={async (contentHtml, isManual) => {
               console.log("[MinutesEditor] onSave triggered", { isManual, length: contentHtml?.length });
               try {
-                const result = await saveMinutes.mutateAsync({ 
-                  contentHtml, 
+                const result = await saveMinutes.mutateAsync({
+                  contentHtml,
                   docStatus: mom?.docStatus || "draft",
                   actionItems: allActionItems,
                   summary: mom?.summary,
@@ -222,10 +232,10 @@ export default function MinutesEditor() {
                         if (e.key === "Enter" && e.target.value.trim()) {
                           const task = e.target.value.trim();
                           const newItems = [...allActionItems, { task, assignedTo: "Unassigned", status: "pending" }];
-                          saveMinutes.mutate({ 
-                            contentHtml: mom?.contentHtml || "<p></p>", 
+                          saveMinutes.mutate({
+                            contentHtml: mom?.contentHtml || "<p></p>",
                             actionItems: newItems,
-                            isManual: true 
+                            isManual: true
                           });
                           e.target.value = "";
                         }
@@ -247,14 +257,14 @@ export default function MinutesEditor() {
                           </span>
                         )}
                       </div>
-                      <button 
+                      <button
                         className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity"
                         onClick={() => {
                           const newItems = allActionItems.filter((_, i) => i !== index);
-                          saveMinutes.mutate({ 
-                            contentHtml: mom?.contentHtml || "<p></p>", 
+                          saveMinutes.mutate({
+                            contentHtml: mom?.contentHtml || "<p></p>",
                             actionItems: newItems,
-                            isManual: true 
+                            isManual: true
                           });
                         }}
                       >

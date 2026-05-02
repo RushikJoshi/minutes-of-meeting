@@ -43,9 +43,11 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
   const agenda = escapeHtml(meeting?.agenda || "—");
   const date = formatDate(meeting?.date);
   const timeRange =
-    meeting?.startTime || meeting?.endTime
-      ? `${formatTime(meeting?.startTime)} – ${formatTime(meeting?.endTime)}`
-      : "—";
+    meeting?.actualStartTime || meeting?.actualEndTime
+      ? `${formatTime(meeting?.actualStartTime)} – ${formatTime(meeting?.actualEndTime || meeting?.endTime)}`
+      : (meeting?.startTime || meeting?.endTime
+        ? `${formatTime(meeting?.startTime)} – ${formatTime(meeting?.endTime)}`
+        : "—");
   const participants = Array.isArray(meeting?.participants)
     ? meeting.participants.map(participantToLabel).filter(Boolean)
     : [];
@@ -192,16 +194,23 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
           </thead>
           <tbody>
             ${(meeting.participants || []).map(p => {
-              const joinValue = p.lastJoinedAt || p.joinedAt;
-              const leaveValue = p.leftAt || p.lastActiveAt;
+              const joinValue = p.joinedAt || p.lastJoinedAt;
+              const leaveValue = p.leftAt;
               const joinT = joinValue ? new Date(joinValue).getTime() : 0;
               const leaveT = leaveValue ? new Date(leaveValue).getTime() : 0;
+              
               let duration = '—';
-              if (joinT && leaveT && leaveT >= joinT) {
-                const mins = Math.round((leaveT - joinT) / 60000);
-                duration = mins > 0 ? (mins + " min") : '< 1 min';
-              } else if (p.status === 'joined') {
-                duration = 'Ongoing';
+              if (joinT) {
+                if (leaveT && leaveT >= joinT) {
+                  const mins = Math.round((leaveT - joinT) / 60000);
+                  duration = mins > 0 ? (mins + " min") : '< 1 min';
+                } else if (meeting.status === 'ongoing' || meeting.status === 'scheduled') {
+                  duration = 'Ongoing';
+                } else if (meeting.actualEndTime) {
+                  const endT = new Date(meeting.actualEndTime).getTime();
+                  const mins = Math.round((endT - joinT) / 60000);
+                  duration = mins > 0 ? (mins + " min") : '< 1 min';
+                }
               }
 
               const isPresent = Boolean(joinT);
@@ -212,8 +221,8 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
               <tr>
                 <td>${escapeHtml(p.name || p.email)}${p.email && p.name ? `<div class="muted" style="font-size:11px; margin-top:2px;">${escapeHtml(p.email)}</div>` : ""}</td>
                 <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-                <td>${joinT ? formatTime(joinValue) : '—'}</td>
-                <td>${leaveT ? formatTime(leaveValue) : '—'}</td>
+                <td>${joinT ? `Join at ${formatTime(joinValue)}` : '—'}</td>
+                <td>${joinT ? (leaveT ? `Leave at ${formatTime(leaveValue)}` : (meeting.status === 'completed' ? `End at ${formatTime(meeting.actualEndTime || meeting.endTime)}` : '—')) : '—'}</td>
                 <td>${duration}</td>
               </tr>
             `}).join('')}

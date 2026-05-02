@@ -128,8 +128,8 @@ export default function Dashboard() {
                       </div>
                       <span
                         className={`text-xs px-2 py-1 rounded border ${m.status === "completed"
-                            ? "bg-green-50 border-green-200 text-green-800"
-                            : "bg-amber-50 border-amber-200 text-amber-800"
+                          ? "bg-green-50 border-green-200 text-green-800"
+                          : "bg-amber-50 border-amber-200 text-amber-800"
                           }`}
                       >
                         {m.status || "scheduled"}

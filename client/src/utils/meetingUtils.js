@@ -32,11 +32,15 @@ export function meetingToCalendarEvent(meeting) {
 
 export function formatMeetingTime(meeting) {
   if (!meeting?.startTime) return "Time not set";
+  if (typeof meeting.startTime === "string" && meeting.startTime.includes(":")) {
+    if (meeting.endTime) return `${meeting.startTime} - ${meeting.endTime}`;
+    return meeting.startTime;
+  }
+  
   const start = new Date(meeting.startTime);
   const end = meeting.endTime ? new Date(meeting.endTime) : null;
-  
   const format = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
+
   if (end) return `${format(start)} - ${format(end)}`;
   return format(start);
 }
@@ -58,3 +62,71 @@ export function statusTone(status) {
       return "bg-blue-50 text-blue-700 border-blue-200";
   }
 }
+
+export const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case "scheduled": return "bg-blue-100 text-blue-700";
+    case "ongoing": return "bg-emerald-100 text-emerald-700";
+    case "completed": return "bg-slate-100 text-slate-700";
+    case "cancelled": return "bg-rose-100 text-rose-700";
+    default: return "bg-slate-100 text-slate-600";
+  }
+};
+
+/**
+ * Generates the default HTML template for a new MOM document.
+ * Ensuring cells have <p></p> to ensure they are focusable in Tiptap.
+ */
+export const getDefaultMomTemplate = (meeting, creatorName = "Admin") => {
+  const dateStr = meeting?.date ? new Date(meeting.date).toLocaleDateString() : "______________________";
+  const timeStr = meeting?.startTime || "______________________";
+  const participantNames = meeting?.participants?.map(p => p.name || p.email).join(", ") || "______________________";
+
+  return `
+    <h1 style="text-align: center;">
+      <u>${(meeting?.title || "MEETING TITLE").toUpperCase()}</u>
+    </h1>
+    <br/>
+    <div style="margin-bottom: 20px;">
+      <p>📅 <strong>Date of Meeting :</strong> <span>${dateStr}</span></p>
+      <p>⏰ <strong>Time of Meeting :</strong> <span>${timeStr}</span></p>
+      <p>👤 <strong>From :</strong> <span>${creatorName}</span></p>
+      <p>👥 <strong>To :</strong> <span>${participantNames}</span></p>
+    </div>
+    <br/>
+    <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
+      (Tip: Click inside table cell → then use <strong>+</strong> buttons)
+    </p>
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+      <tr style="background-color: #f8fafc;">
+        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 50px;"><p>#</p></th>
+        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;"><p>Discussion / Tasks</p></th>
+        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Complete Date</p></th>
+        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Responsible</p></th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>1</p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>${meeting?.agenda || ""}</p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>2</p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+      </tr>
+    </table>
+    <br/>
+    <div style="margin-top: 20px;">
+      <p>📝 <strong>Additional Notes:</strong></p>
+      <p><span>${meeting?.description || "______________________________________________"}</span></p>
+    </div>
+    <br/><br/>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>Prepared By :</strong> <span>${creatorName}</span></p>
+      <p><strong>Approved By :</strong> <span>______________________</span></p>
+    </div>
+    <p></p>
+  `;
+};
