@@ -97,32 +97,128 @@ export default function ReceptionistDashboard() {
   const downloadPass = (v) => {
     const win = window.open("", "_blank");
     win.document.write(`
-      <html><head><title>Visitor Pass</title>
-      <style>
-        body { font-family: sans-serif; padding: 40px; max-width: 500px; margin: auto; }
-        h1 { color: #1e293b; font-size: 24px; } 
-        .code { font-size: 36px; font-weight: 900; letter-spacing: 0.3em; color: #2563eb; background: #eff6ff; padding: 16px; border-radius: 12px; text-align: center; margin: 16px 0; }
-        .row { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding: 8px 0; font-size: 14px; }
-        .label { color: #64748b; font-weight: 600; } 
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #d1fae5; color: #065f46; }
-      </style></head>
+      <html>
+      <head>
+        <title>Visitor Pass - ${v.entryCode || "N/A"}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+          @page { size: A4; margin: 0; }
+          body { -webkit-print-color-adjust: exact; margin: 0; padding: 25mm; font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
+          .document-wrapper { width: 100%; max-width: 170mm; margin: 0 auto; display: flex; flex-direction: column; min-height: 247mm; }
+          .header-line { height: 4px; background: linear-gradient(to right, #0f172a, #3b82f6); border-radius: 2px; margin-bottom: 32px; }
+          .section-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 16px; }
+          .info-card { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #f1f5f9; }
+          .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+          .value { font-size: 13px; font-weight: 600; color: #1e293b; }
+          @media print { body { padding: 25mm; } .no-print { display: none; } }
+        </style>
+      </head>
       <body>
-        <h1>🏢 Visitor Entry Pass</h1>
-        <div class="code">${v.entryCode || "------"}</div>
-        <div class="row"><span class="label">Name</span><span>${v.name}</span></div>
-        <div class="row"><span class="label">Mobile</span><span>${v.mobile}</span></div>
-        <div class="row"><span class="label">Email</span><span>${v.email || "—"}</span></div>
-        <div class="row"><span class="label">Purpose</span><span>${v.purpose}</span></div>
-        <div class="row"><span class="label">Host</span><span>${v.meetingWithName}</span></div>
-        <div class="row"><span class="label">Status</span><span class="badge">${v.status}</span></div>
-        <div class="row"><span class="label">ID Proof</span><span>${v.document?.type || "—"}: ${v.document?.number || "—"}</span></div>
-        <div class="row"><span class="label">Check-In</span><span>${v.inTime ? new Date(v.inTime).toLocaleString() : "—"}</span></div>
-        <div class="row"><span class="label">Check-Out</span><span>${v.outTime ? new Date(v.outTime).toLocaleString() : "—"}</span></div>
-        <p style="margin-top:24px;font-size:11px;color:#94a3b8;text-align:center;">Generated on ${new Date().toLocaleString()}</p>
-      </body></html>
+        <div class="document-wrapper">
+          <!-- Top Header -->
+          <div class="flex justify-between items-end mb-4">
+            <div>
+              <div class="text-2xl font-black tracking-tighter text-slate-900">MOM <span class="text-blue-600">SYSTEM</span></div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enterprise Solutions</div>
+            </div>
+            <div class="text-right">
+              <h2 class="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Visitor Visit Record</h2>
+              <div class="text-[9px] font-bold text-slate-400">Ref: ${v._id?.slice(-8).toUpperCase()}</div>
+            </div>
+          </div>
+          
+          <div class="header-line"></div>
+
+          <!-- Highlight Section -->
+          <div class="mb-12 flex justify-between items-start">
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Visitor Name</div>
+              <h1 class="text-5xl font-black text-slate-900 tracking-tight uppercase">${v.name}</h1>
+            </div>
+            <!-- Removed status badge as per request -->
+          </div>
+
+          <!-- Info Grid -->
+          <div class="grid grid-cols-2 gap-6 mb-12">
+            <div class="space-y-6">
+              <div class="info-card">
+                <div class="label">Contact Information</div>
+                <div class="space-y-4 mt-4">
+                  <div>
+                    <div class="label text-[9px]">Mobile Number</div>
+                    <div class="value">${v.mobile}</div>
+                  </div>
+                  <div>
+                    <div class="label text-[9px]">Email Address</div>
+                    <div class="value">${v.email || "—"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="label">Identification Details</div>
+                <div class="mt-4">
+                  <div class="label text-[9px]">ID Proof Type / Number</div>
+                  <div class="value uppercase">${v.document?.type || "—"} : ${v.document?.number || "—"}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <div class="info-card h-full">
+                <div class="label">Visit Details</div>
+                <div class="space-y-4 mt-4">
+                  <div>
+                    <div class="label text-[9px]">Purpose of Visit</div>
+                    <div class="value capitalize">${v.purpose}</div>
+                  </div>
+                  <div>
+                    <div class="label text-[9px]">Designated Host</div>
+                    <div class="value">${v.meetingWithName}</div>
+                  </div>
+                  <div>
+                    <div class="label text-[9px]">Security Entry Code</div>
+                    <div class="value tracking-[0.3em]">${v.entryCode || "—"}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Section -->
+          <div class="mb-12">
+            <div class="section-title">Logistics & Timestamps</div>
+            <div class="grid grid-cols-2 gap-8">
+              <div class="flex items-center gap-4">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <div>
+                  <div class="label">Check-In Time</div>
+                  <div class="value">${v.inTime ? new Date(v.inTime).toLocaleString() : "—"}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-2 h-2 rounded-full bg-slate-400"></div>
+                <div>
+                  <div class="label">Check-Out Time</div>
+                  <div class="value">${v.outTime ? new Date(v.outTime).toLocaleString() : "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="mt-auto pt-8 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <div>Generated by Security Management System</div>
+            <div>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+          </div>
+        </div>
+      </body>
+      </html>
     `);
     win.document.close();
-    win.print();
+    setTimeout(() => {
+      win.print();
+    }, 500);
   };
 
   // Stats

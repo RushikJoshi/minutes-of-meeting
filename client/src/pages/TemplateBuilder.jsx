@@ -2,9 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../api/api";
 import WordLikeEditor from "../components/editor/WordLikeEditor";
+import { 
+  Info,
+  RotateCcw
+} from "lucide-react";
 
 const MOM_DEFAULT_HTML = `
-  <h1 style="text-align: center;"><u>MEETING TITLE</u></h1>
+  <h1 style="text-align: center; text-decoration: underline;">[MEETING_TITLE]</h1>
   <br/>
   <div style="margin-bottom: 20px;">
     <p>📅 <strong>Date of Meeting :</strong> <span>[DATE]</span></p>
@@ -14,32 +18,37 @@ const MOM_DEFAULT_HTML = `
   </div>
   <br/>
   <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
-    (Tip: Click inside table cell → then use <strong>+</strong> buttons)
+    (Tip: Click inside table cell → then use <strong>+</strong> buttons in toolbar)
   </p>
-  <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+  <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; table-layout: auto;">
     <tr style="background-color: #f8fafc;">
-      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 50px;"><p>#</p></th>
+      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 40px; white-space: nowrap;"><p>#</p></th>
       <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;"><p>Discussion / Tasks</p></th>
-      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Complete Date</p></th>
-      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Responsible</p></th>
+      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 140px; white-space: nowrap;"><p>Complete Date</p></th>
+      <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 140px; white-space: nowrap;"><p>Responsible</p></th>
     </tr>
     <tr>
-      <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>1</p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p>1</p></td>
       <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-      <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-      <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
     </tr>
     <tr>
-      <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>2</p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p>2</p></td>
       <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p>3</p></td>
       <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-      <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
+      <td style="border: 1px solid #e2e8f0; padding: 12px; white-space: nowrap;"><p></p></td>
     </tr>
   </table>
   <br/>
   <div style="margin-top: 20px;">
     <p>📝 <strong>Additional Notes:</strong></p>
-    <p><span>______________________________________________</span></p>
     <p><span>______________________________________________</span></p>
   </div>
   <br/><br/>
@@ -49,6 +58,15 @@ const MOM_DEFAULT_HTML = `
   </div>
   <p></p>
 `;
+
+const PLACEHOLDERS = [
+  { label: "Date", value: "[DATE]" },
+  { label: "Time", value: "[TIME]" },
+  { label: "Title", value: "[MEETING_TITLE]" },
+  { label: "Creator", value: "[CREATOR]" },
+  { label: "Participants", value: "[PARTICIPANTS]" },
+  { label: "Agenda", value: "[AGENDA]" },
+];
 
 function isContentBlank(html) {
   return !html || /^(\s|<p>|<\/p>|<br>)*$/i.test(html);
@@ -125,32 +143,44 @@ export default function TemplateBuilder() {
   const initialEditorContent = isContentBlank(template?.contentHtml) ? MOM_DEFAULT_HTML : template.contentHtml;
 
   return (
-    <div className="page-shell">
-      <div className="page-container fade-up">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-slate-800">MOM Template Builder</h2>
-          <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to reset to the default template? This will overwrite your current changes.")) {
-                setTemplate(prev => ({ ...prev, contentHtml: MOM_DEFAULT_HTML }));
-              }
-            }}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all"
-          >
-            Reset to Default
-          </button>
+    <div className="w-full min-h-screen bg-slate-50">
+      <div className="w-full space-y-6 fade-up p-4 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">MOM Template Designer</h2>
+            <p className="text-sm text-slate-500 mt-1">Design the master structure for your automated meeting minutes.</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (window.confirm("Reset to default template? This will overwrite your current changes.")) {
+                  setTemplate(prev => ({ ...prev, contentHtml: MOM_DEFAULT_HTML }));
+                }
+              }}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all"
+            >
+              <RotateCcw size={16} />
+              <span>Reset Template</span>
+            </button>
+          </div>
         </div>
-        <WordLikeEditor
-          key={`${template?._id}-${template?.contentHtml?.length || 0}`}
-          title={template?.title || "MOM Word Editor"}
-          subtitle=""
-          initialContent={initialEditorContent}
-          loading={loading}
-          saving={saving}
-          onSave={saveTemplate}
-          onUploadImage={handleUploadImage}
-          autoSave
-        />
+
+
+        <div className="relative">
+          <WordLikeEditor
+            key={template?._id || "loading"}
+            title="MOM Master Editor"
+            subtitle="Changes are automatically synced to your workspace."
+            initialContent={initialEditorContent}
+            loading={loading}
+            saving={saving}
+            onSave={saveTemplate}
+            onUploadImage={handleUploadImage}
+            autoSave
+            fullWidth={true}
+          />
+        </div>
       </div>
     </div>
   );

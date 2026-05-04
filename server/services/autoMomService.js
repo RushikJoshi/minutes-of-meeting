@@ -1,6 +1,7 @@
 const Meeting = require("../models/Meeting");
 const Mom = require("../models/Mom");
 const ActionItem = require("../models/ActionItem");
+const EditorTemplate = require("../models/EditorTemplate");
 const aiService = require("./aiService");
 
 /**
@@ -74,17 +75,6 @@ function buildAttendance(meeting) {
     },
     details: attendanceDetails
   };
-
-  return {
-    summary: {
-      total: participants.length,
-      present: presentCount,
-      late: lateCount,
-      absent: absentCount,
-      leftEarly: leftEarlyCount,
-    },
-    details: attendanceDetails
-  };
 }
 
 /**
@@ -96,6 +86,8 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
 
   const attendance = buildAttendance(meeting);
   const absentList = attendance.details.filter((d) => d.status === "Absent");
+  
+  let aiSummary = null;
   if (meeting.notes && meeting.notes.length > 50) {
     try {
       console.log(`[AI] Summarizing meeting: ${meeting._id}`);
@@ -115,6 +107,61 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
     deadline: item.deadline,
     status: item.status
   }));
+
+  // Fetch Editor Template
+  let contentHtml = "";
+  const template = await EditorTemplate.findOne({ workspaceId });
+  
+  if (template && template.contentHtml && template.contentHtml.length > 10) {
+    contentHtml = template.contentHtml;
+    
+    // Replace Placeholders
+    const replacements = {
+      "[DATE]": meeting.date ? new Date(meeting.date).toLocaleDateString() : "TBD",
+      "[TIME]": meeting.startTime ? new Date(meeting.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD",
+      "[CREATOR]": meeting.createdBy?.name || "Admin",
+      "[PARTICIPANTS]": attendance.details.map(d => d.name || d.email).join(", "),
+      "[MEETING_TITLE]": meeting.title || "Untitled Meeting",
+      "[AGENDA]": meeting.agenda || meeting.description || "No agenda specified",
+    };
+
+    Object.entries(replacements).forEach(([placeholder, value]) => {
+      // Use regex with global flag to replace all occurrences
+      const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+      contentHtml = contentHtml.replace(regex, value);
+    });
+  } else {
+    // Fallback if no template exists
+    contentHtml = `
+      <h1 style="text-align: center;">Minutes of Meeting</h1>
+      <div style="text-align: right;">
+        <p><strong>Date of meeting:</strong> ${meeting.date ? new Date(meeting.date).toLocaleDateString() : "TBD"}</p>
+        <p><strong>Time of meeting:</strong> ${meeting.startTime ? new Date(meeting.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}</p>
+        <p><strong>From:</strong> ${meeting.createdBy?.name || "Admin"}</p>
+        <p><strong>To:</strong> ${attendance.details.map(d => d.name || d.email).join(", ")}</p>
+      </div>
+      <br/>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+        <thead>
+          <tr style="background-color: #f8fafc;">
+            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Serial Number</th>
+            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Discussion/Tasks</th>
+            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Task Complete Date</th>
+            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Responsible Person</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="border: 1px solid #e2e8f0; padding: 12px;">1</td>
+            <td style="border: 1px solid #e2e8f0; padding: 12px;">${meeting.agenda || ""}</td>
+            <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
+            <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
+          </tr>
+        </tbody>
+      </table>
+      <p></p>
+    `;
+  }
 
   // Create the Mom document with structured data
   const mom = await Mom.findOneAndUpdate(
@@ -149,35 +196,7 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
           name: d.name,
           reason: "",
         })),
-        contentHtml: `
-          <h1 style="text-align: center;">Minutes of Meeting</h1>
-          <div style="text-align: right;">
-            <p><strong>Date of meeting:</strong> ${meeting.date ? new Date(meeting.date).toLocaleDateString() : "TBD"}</p>
-            <p><strong>Time of meeting:</strong> ${meeting.startTime ? new Date(meeting.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}</p>
-            <p><strong>From:</strong> ${meeting.createdBy?.name || "Admin"}</p>
-            <p><strong>To:</strong> ${attendance.details.map(d => d.name || d.email).join(", ")}</p>
-          </div>
-          <br/>
-          <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
-            <thead>
-              <tr style="background-color: #f8fafc;">
-                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Serial Number</th>
-                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Discussion/Tasks</th>
-                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Task Complete Date</th>
-                <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Responsible Person</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="border: 1px solid #e2e8f0; padding: 12px;">1</td>
-                <td style="border: 1px solid #e2e8f0; padding: 12px;">${meeting.agenda || ""}</td>
-                <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
-                <td style="border: 1px solid #e2e8f0; padding: 12px;"></td>
-              </tr>
-            </tbody>
-          </table>
-          <p></p>
-        `
+        contentHtml
       },
       $setOnInsert: {
         createdBy: userId,

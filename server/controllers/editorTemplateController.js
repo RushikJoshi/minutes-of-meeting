@@ -4,7 +4,36 @@ const asyncHandler = require("../utils/asyncHandler");
 
 async function ensureTemplate(req) {
   let template = await EditorTemplate.findOne({ workspaceId: req.workspace._id }).populate("attachments");
-  const defaultHtml = `<h1 style="text-align: center;">Minutes of Meeting</h1><div style="text-align: right;"><p><strong>Date of meeting:</strong> [DATE]</p><p><strong>Time of meeting:</strong> [TIME]</p><p><strong>From:</strong> [CREATOR]</p><p><strong>To:</strong> [PARTICIPANTS]</p></div><br/><table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;"><thead><tr style="background-color: #f8fafc;"><th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Serial Number</th><th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Discussion/Tasks</th><th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Task Complete Date</th><th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;">Responsible Person</th></tr></thead><tbody><tr><td style="border: 1px solid #e2e8f0; padding: 12px;">1</td><td style="border: 1px solid #e2e8f0; padding: 12px;"></td><td style="border: 1px solid #e2e8f0; padding: 12px;"></td><td style="border: 1px solid #e2e8f0; padding: 12px;"></td></tr></tbody></table><p></p>`;
+  const defaultHtml = `
+    <h1 style="text-align: center;"><u>MEETING TITLE</u></h1>
+    <br/>
+    <div style="margin-bottom: 20px;">
+      <p>📅 <strong>Date of Meeting :</strong> <span>[DATE]</span></p>
+      <p>⏰ <strong>Time of Meeting :</strong> <span>[TIME]</span></p>
+      <p>👤 <strong>From :</strong> <span>[CREATOR]</span></p>
+      <p>👥 <strong>To :</strong> <span>[PARTICIPANTS]</span></p>
+    </div>
+    <br/>
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+      <thead>
+        <tr style="background-color: #f8fafc;">
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 50px;"><p>#</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;"><p>Discussion / Tasks</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Complete Date</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Responsible</p></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>1</p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+        </tr>
+      </tbody>
+    </table>
+    <p></p>
+  `;
 
   if (!template) {
     template = await EditorTemplate.create({

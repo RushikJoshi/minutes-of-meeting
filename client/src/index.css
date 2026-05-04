@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -99,7 +101,7 @@
   }
 
   .word-editor-loading-card {
-    @apply page-card flex w-full max-w-md flex-col items-center gap-3 p-8 text-center;
+    @apply page-card flex w-full max-md flex-col items-center gap-3 p-8 text-center;
   }
 
   .word-editor-spinner {
@@ -255,7 +257,7 @@
   }
 
   .word-editor-content table {
-    @apply my-6 w-full table-fixed border-collapse overflow-hidden rounded-2xl border border-slate-300;
+    @apply my-6 w-full table-auto border-collapse overflow-hidden rounded-2xl border border-slate-300;
   }
 
   .word-editor-content th {

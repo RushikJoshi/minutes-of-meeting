@@ -112,11 +112,11 @@ export default function EmployeeDashboard() {
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="page-card page-card-hover p-5 bg-gradient-to-br from-white to-blue-50/30">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Action Items Pending</div>
+                <div className="text-sm font-semibold text-slate-500 uppercase">Tasks Pending</div>
                 <div className="mt-2 text-3xl font-bold text-blue-600">{actionSummary.pending}</div>
               </div>
               <div className="page-card page-card-hover p-5 bg-gradient-to-br from-white to-emerald-50/30">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Action Items Done</div>
+                <div className="text-sm font-semibold text-slate-500 uppercase">Tasks Done</div>
                 <div className="mt-2 text-3xl font-bold text-emerald-600">{actionSummary.done}</div>
               </div>
             </div>

@@ -81,11 +81,10 @@ export const getDefaultMomTemplate = (meeting, creatorName = "Admin") => {
   const dateStr = meeting?.date ? new Date(meeting.date).toLocaleDateString() : "______________________";
   const timeStr = meeting?.startTime || "______________________";
   const participantNames = meeting?.participants?.map(p => p.name || p.email).join(", ") || "______________________";
+  const title = (meeting?.title || "MEETING TITLE").toUpperCase();
 
   return `
-    <h1 style="text-align: center;">
-      <u>${(meeting?.title || "MEETING TITLE").toUpperCase()}</u>
-    </h1>
+    <h1 style="text-align: center;"><u>${title}</u></h1>
     <br/>
     <div style="margin-bottom: 20px;">
       <p>📅 <strong>Date of Meeting :</strong> <span>${dateStr}</span></p>
@@ -98,24 +97,22 @@ export const getDefaultMomTemplate = (meeting, creatorName = "Admin") => {
       (Tip: Click inside table cell → then use <strong>+</strong> buttons)
     </p>
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
-      <tr style="background-color: #f8fafc;">
-        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 50px;"><p>#</p></th>
-        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;"><p>Discussion / Tasks</p></th>
-        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Complete Date</p></th>
-        <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Responsible</p></th>
-      </tr>
-      <tr>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>1</p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>${meeting?.agenda || ""}</p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-      </tr>
-      <tr>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>2</p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-        <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
-      </tr>
+      <thead>
+        <tr style="background-color: #f8fafc;">
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 50px;"><p>#</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left;"><p>Discussion / Tasks</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Complete Date</p></th>
+          <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; width: 150px;"><p>Responsible</p></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>1</p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p>${meeting?.agenda || ""}</p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+          <td style="border: 1px solid #e2e8f0; padding: 12px;"><p></p></td>
+        </tr>
+      </tbody>
     </table>
     <br/>
     <div style="margin-top: 20px;">

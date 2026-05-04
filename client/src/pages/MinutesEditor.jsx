@@ -45,17 +45,44 @@ export default function MinutesEditor() {
     },
   });
 
+  const templateQuery = useQuery({
+    queryKey: ["editor-template"],
+    queryFn: async () => (await API.get("/editor-template")).data,
+  });
+
   const meeting = minutesQuery.data?.meeting;
   const mom = lastSavedMom || minutesQuery.data?.mom;
   const [realtimeActionItems, setRealtimeActionItems] = useState([]);
   const [editorHtml, setEditorHtml] = useState("");
 
   const defaultContent = useMemo(() => {
-    const isBlank = !mom?.contentHtml || /^(\s|<p>|<\/p>|<br>)*$/i.test(mom.contentHtml);
-    if (!isBlank) return mom.contentHtml;
-    if (!meeting) return "<p></p>";
-    return getDefaultMomTemplate(meeting, user?.name || "Admin");
-  }, [mom?.contentHtml, meeting, user?.name]);
+    let html = mom?.contentHtml || "";
+    const isBlank = !html || /^(\s|<p>|<\/p>|<br>)*$/i.test(html);
+    
+    if (isBlank) {
+      // Use custom template or fallback to default
+      html = templateQuery.data?.contentHtml || getDefaultMomTemplate(meeting, user?.name || "Admin");
+    }
+
+    // Always replace placeholders if they exist in the content
+    if (meeting && html.includes("[")) {
+      const replacements = {
+        "[DATE]": meeting.date ? new Date(meeting.date).toLocaleDateString() : "TBD",
+        "[TIME]": meeting.startTime || "TBD",
+        "[CREATOR]": user?.name || "Admin",
+        "[PARTICIPANTS]": meeting.participants?.map(p => p.name || p.email).join(", ") || "TBD",
+        "[MEETING_TITLE]": meeting.title || "Untitled Meeting",
+        "[AGENDA]": meeting.agenda || meeting.description || "No agenda",
+      };
+
+      Object.entries(replacements).forEach(([placeholder, value]) => {
+        const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        html = html.replace(regex, value);
+      });
+    }
+
+    return html;
+  }, [mom?.contentHtml, meeting, user?.name, templateQuery.data]);
 
   // Sync editorHtml when mom loads or defaultContent changes
   useEffect(() => {
@@ -99,7 +126,7 @@ export default function MinutesEditor() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              className="btn-primary !bg-white !text-blue-600 hover:!bg-blue-50"
+              className="btn-primary !bg-blue-600 !text-white hover:!bg-blue-700 shadow-lg shadow-blue-600/20"
               onClick={async () => {
                 try {
                   console.log("[MinutesEditor] Publish button clicked", { htmlLength: editorHtml.length });
@@ -148,9 +175,9 @@ export default function MinutesEditor() {
           </div>
         </div>
 
-        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
           <WordLikeEditor
-            title="Minutes of Meeting"
+            title={meeting.title || "Minutes of Meeting"}
             subtitle={`${new Date(meeting.date).toLocaleDateString()} | ${meeting.startTime || "Time TBD"} - ${meeting.endTime || "Time TBD"}`}
             initialContent={defaultContent}
             saving={saveMinutes.isPending}
@@ -219,7 +246,7 @@ export default function MinutesEditor() {
             </div>
 
             <div className="page-card p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Generated action items</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Generated Tasks</div>
               <div className="mt-4 space-y-3">
                 <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                   <div className="space-y-3">
@@ -299,7 +326,7 @@ function ContextRow({ label, value }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</div>
-      <div className="mt-2 font-semibold text-slate-800">{value}</div>
+      <div className="mt-2 font-semibold text-slate-800 break-all">{value}</div>
     </div>
   );
 }

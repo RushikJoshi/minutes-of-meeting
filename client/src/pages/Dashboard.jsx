@@ -102,11 +102,11 @@ export default function Dashboard() {
                 <div className="mt-2 text-3xl font-bold">{stats.scheduled}</div>
               </div>
               <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Action items pending</div>
+                <div className="text-sm text-gray-600">Tasks pending</div>
                 <div className="mt-2 text-3xl font-bold">{actionSummary.pending}</div>
               </div>
               <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Action items done</div>
+                <div className="text-sm text-gray-600">Tasks done</div>
                 <div className="mt-2 text-3xl font-bold">{actionSummary.done}</div>
               </div>
             </div>

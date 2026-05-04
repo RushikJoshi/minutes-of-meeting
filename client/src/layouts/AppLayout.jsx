@@ -48,6 +48,7 @@ export default function AppLayout() {
   // Notification State
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const notifRef = useRef(null);
 
   // User menu
@@ -55,11 +56,15 @@ export default function AppLayout() {
   const userMenuRef = useRef(null);
 
   const fetchNotifications = async () => {
+    setIsRefreshing(true);
     try {
       const res = await API.get("/notifications", { params: { limit: 10 } });
       setNotifications(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error("Failed to fetch notifications");
+    } finally {
+      // Add a small delay so the user can see the refresh happen
+      setTimeout(() => setIsRefreshing(false), 600);
     }
   };
 
@@ -122,7 +127,7 @@ export default function AppLayout() {
     },
     {
       to: "/action-items",
-      label: "Action Items",
+      label: "Tasks",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -182,7 +187,7 @@ export default function AppLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? "w-14" : "w-60"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? "w-14" : "w-52"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <div className="flex h-full flex-col min-h-0">
           {/* Sidebar Header */}
@@ -266,7 +271,7 @@ export default function AppLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-60'}`}>
+      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-52'}`}>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 border-b border-white/60 bg-white/70 backdrop-blur-xl">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-3">
@@ -303,7 +308,20 @@ export default function AppLayout() {
                     <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-[2rem] border border-slate-200 bg-white/95 backdrop-blur-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden animate-fade-in z-50">
                       <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <h3 className="text-xs font-semibold text-slate-900 uppercase">Notifications</h3>
-                        <button onClick={fetchNotifications} className="text-[10px] font-semibold text-blue-600">Refresh</button>
+                        <button 
+                          onClick={fetchNotifications} 
+                          disabled={isRefreshing}
+                          className={`text-[10px] font-bold uppercase tracking-wider transition-all ${isRefreshing ? 'text-slate-400' : 'text-blue-600 hover:text-blue-700'}`}
+                        >
+                          {isRefreshing ? (
+                            <span className="flex items-center gap-1.5">
+                              <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" strokeLinecap="round"/>
+                              </svg>
+                              Updating...
+                            </span>
+                          ) : "Refresh"}
+                        </button>
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">
                         {notifications.length > 0 ? (
