@@ -76,7 +76,7 @@ export default function EmployeeDashboard() {
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
             <h1 className="section-title">Employee Workspace</h1>
-            <p className="section-subtitle">Welcome back, {user?.name || "Employee"}!</p>
+
           </div>
           <div className="hidden sm:block">
             <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-700">
@@ -95,7 +95,7 @@ export default function EmployeeDashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
               <div className="page-card page-card-hover p-5 border-l-4 border-l-blue-500">
                 <div className="text-sm font-semibold text-slate-500 uppercase">My Meetings</div>
                 <div className="mt-2 text-3xl font-bold text-slate-800">{stats.total}</div>
@@ -108,16 +108,13 @@ export default function EmployeeDashboard() {
                 <div className="text-sm font-semibold text-slate-500 uppercase">Scheduled</div>
                 <div className="mt-2 text-3xl font-bold text-slate-800">{stats.scheduled}</div>
               </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="page-card page-card-hover p-5 bg-gradient-to-br from-white to-blue-50/30">
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-purple-500">
                 <div className="text-sm font-semibold text-slate-500 uppercase">Tasks Pending</div>
-                <div className="mt-2 text-3xl font-bold text-blue-600">{actionSummary.pending}</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{actionSummary.pending}</div>
               </div>
-              <div className="page-card page-card-hover p-5 bg-gradient-to-br from-white to-emerald-50/30">
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-indigo-500">
                 <div className="text-sm font-semibold text-slate-500 uppercase">Tasks Done</div>
-                <div className="mt-2 text-3xl font-bold text-emerald-600">{actionSummary.done}</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{actionSummary.done}</div>
               </div>
             </div>
 

@@ -89,25 +89,25 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Total meetings</div>
-                <div className="mt-2 text-3xl font-bold">{stats.total}</div>
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-blue-500">
+                <div className="text-sm font-semibold text-slate-500 uppercase">Total meetings</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.total}</div>
               </div>
-              <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Completed</div>
-                <div className="mt-2 text-3xl font-bold">{stats.completed}</div>
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-emerald-500">
+                <div className="text-sm font-semibold text-slate-500 uppercase">Completed</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.completed}</div>
               </div>
-              <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Scheduled</div>
-                <div className="mt-2 text-3xl font-bold">{stats.scheduled}</div>
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-amber-500">
+                <div className="text-sm font-semibold text-slate-500 uppercase">Scheduled</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.scheduled}</div>
               </div>
-              <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Tasks pending</div>
-                <div className="mt-2 text-3xl font-bold">{actionSummary.pending}</div>
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-purple-500">
+                <div className="text-sm font-semibold text-slate-500 uppercase">Tasks pending</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{actionSummary.pending}</div>
               </div>
-              <div className="page-card page-card-hover p-5">
-                <div className="text-sm text-gray-600">Tasks done</div>
-                <div className="mt-2 text-3xl font-bold">{actionSummary.done}</div>
+              <div className="page-card page-card-hover p-5 border-l-4 border-l-indigo-500">
+                <div className="text-sm font-semibold text-slate-500 uppercase">Tasks done</div>
+                <div className="mt-2 text-3xl font-bold text-slate-800">{actionSummary.done}</div>
               </div>
             </div>
 

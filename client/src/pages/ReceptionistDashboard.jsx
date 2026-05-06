@@ -266,7 +266,7 @@ export default function ReceptionistDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
 
       {/* Navbar */}
       <nav className="bg-slate-900 text-white shadow-2xl">
@@ -396,7 +396,7 @@ export default function ReceptionistDashboard() {
 
                   {/* Header Banner */}
                   <div className="h-28 bg-gradient-to-r from-slate-800 via-slate-900 to-blue-900 relative">
-                    <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 70% 50%, #3b82f6 0%, transparent 60%)"}} />
+
                     <div className="absolute -bottom-10 left-6">
                       <div className="w-20 h-20 bg-white rounded-2xl p-1 shadow-xl">
                         <div className="w-full h-full bg-slate-50 rounded-xl overflow-hidden">

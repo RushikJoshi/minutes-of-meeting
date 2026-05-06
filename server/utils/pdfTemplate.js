@@ -100,6 +100,16 @@ function buildMomHtml({ meeting, mom, baseUrl }) {
         
         /* Clean up standard Tiptap/HTML list styles */
         ul, ol { margin: 10px 0 10px 25px; }
+
+        /* Automatic Table Serial Numbers for PDF */
+        table { counter-reset: rowNumber; }
+        table tr { counter-increment: rowNumber; }
+        table tr:first-child { counter-reset: rowNumber; }
+        table tr:not(:first-child) td:first-child::before {
+          content: counter(rowNumber);
+          font-weight: 700;
+          color: #475569;
+        }
       </style>
     </head>
     <body>

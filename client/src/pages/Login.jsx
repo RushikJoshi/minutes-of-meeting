@@ -35,9 +35,9 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-slate-50 overflow-hidden px-4 py-10 sm:px-6">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(99,102,241,0.16),_transparent_32%)]" />
+
       <div className="glass-panel fade-up relative w-full max-w-md p-6 sm:p-8 bg-white shadow-xl rounded-2xl border border-slate-100 z-10">
-        
+
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Welcome to GT MOM

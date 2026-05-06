@@ -240,7 +240,7 @@ const ImageNode = Node.create({
 
 function ToolbarButton({ active, disabled, onClick, children, title, variant = "default" }) {
   const baseClasses = "inline-flex items-center justify-center rounded-xl transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed";
-  const sizeClasses = "w-9 h-9";
+  const sizeClasses = "h-9 min-w-[36px] px-2";
   
   let variantClasses = "";
   if (variant === "primary") {
@@ -586,62 +586,13 @@ const WordLikeEditor = forwardRef(({
             title="Add Row" 
             onClick={() => {
               const success = editor.chain().focus().addRowAfter().run();
-              if (!success) {
-                toast.error("Please click inside a table cell first");
-                return;
-              }
-              
-              // Smart Re-indexing of Serial Numbers
-              setTimeout(() => {
-                editor.commands.command(({ tr, state }) => {
-                  const { selection, doc } = state;
-                  let tableNode = null;
-                  let tablePos = -1;
-
-                  // 1. Find the table containing the selection
-                  const $pos = doc.resolve(selection.from);
-                  for (let d = $pos.depth; d > 0; d--) {
-                    const node = $pos.node(d);
-                    if (node.type.name === 'table') {
-                      tableNode = node;
-                      tablePos = $pos.before(d);
-                      break;
-                    }
-                  }
-
-                  if (!tableNode || tablePos === -1) return false;
-
-                  // 2. Iterate rows and re-index the first cell
-                  let currentRowPos = tablePos + 1; // Start of first row
-                  tableNode.content.forEach((row, offset, index) => {
-                    if (index > 0) { // Skip header row
-                      const cell = row.firstChild;
-                      if (cell && cell.type.name === 'tableCell') {
-                        const p = cell.firstChild;
-                        if (p && p.type.name === 'paragraph') {
-                          // start of p content: currentRowPos (row) + 1 (cell open) + 1 (p open) = currentRowPos + 2
-                          const start = currentRowPos + 2;
-                          const end = start + p.nodeSize - 2; // p.nodeSize includes tags, -2 to get content range
-                          
-                          const currentText = p.textContent.trim();
-                          const newIndex = String(index);
-                          
-                          // Only update if it's a number or empty to avoid breaking non-serial columns
-                          if (!currentText || !isNaN(currentText)) {
-                            // tr.insertText automatically maps positions for subsequent changes in the same transaction
-                            tr.insertText(newIndex, start, end);
-                          }
-                        }
-                      }
-                    }
-                    currentRowPos += row.nodeSize;
-                  });
-                  return true;
-                });
-              }, 100);
+              if (!success) toast.error("Please click inside a table cell first");
             }}
           >
-            <Plus size={18} className="rotate-90" strokeWidth={2.5} />
+            <div className="flex items-center gap-1.5 px-1">
+              <Plus size={16} strokeWidth={3} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Row</span>
+            </div>
           </ToolbarButton>
           <ToolbarButton 
             title="Add Column" 
@@ -650,7 +601,10 @@ const WordLikeEditor = forwardRef(({
               if (!success) toast.error("Please click inside a table cell first");
             }}
           >
-            <Plus size={18} strokeWidth={2.5} />
+            <div className="flex items-center gap-1.5 px-1">
+              <Plus size={16} strokeWidth={3} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Col</span>
+            </div>
           </ToolbarButton>
           <ToolbarButton 
             title="Delete Table" 

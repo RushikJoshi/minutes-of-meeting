@@ -11,10 +11,6 @@
 
   body {
     @apply bg-slate-100 text-slate-900 antialiased overflow-x-hidden;
-    background-image:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 28%),
-      radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 24%),
-      linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
   }
 
   ::selection {
@@ -40,6 +36,22 @@
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
+  }
+
+  /* Automatic Table Serial Numbers */
+  .word-editor-content table {
+    counter-reset: rowNumber;
+  }
+  .word-editor-content table tr {
+    counter-increment: rowNumber;
+  }
+  .word-editor-content table tr:first-child {
+    counter-reset: rowNumber;
+  }
+  .word-editor-content table tr:not(:first-child) td:first-child p::before {
+    content: counter(rowNumber) " ";
+    font-weight: 700;
+    color: #64748b;
   }
 }
 

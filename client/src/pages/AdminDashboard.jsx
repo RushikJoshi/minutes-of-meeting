@@ -52,7 +52,6 @@ export default function AdminDashboard() {
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
             <h1 className="section-title">Admin Dashboard</h1>
-            <p className="section-subtitle">System overview and control panel.</p>
           </div>
           <div className="hidden sm:block">
             <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-700">
@@ -108,11 +107,10 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <span
-                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${
-                            m.status === "completed"
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                              : "bg-amber-50 border-amber-200 text-amber-700"
-                          }`}
+                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${m.status === "completed"
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : "bg-amber-50 border-amber-200 text-amber-700"
+                            }`}
                         >
                           {m.status || "scheduled"}
                         </span>
@@ -141,11 +139,10 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <span
-                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${
-                            v.document?.status === "VERIFIED" || v.status === "VERIFIED"
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                              : "bg-blue-50 border-blue-200 text-blue-700"
-                          }`}
+                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${v.document?.status === "VERIFIED" || v.status === "VERIFIED"
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : "bg-blue-50 border-blue-200 text-blue-700"
+                            }`}
                         >
                           {v.document?.status === "VERIFIED" ? "Verified" : v.status || "WAITING"}
                         </span>

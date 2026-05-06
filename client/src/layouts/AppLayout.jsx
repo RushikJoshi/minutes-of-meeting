@@ -174,9 +174,8 @@ export default function AppLayout() {
   ];
 
   return (
-    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_58%)]" />
-      <div className="pointer-events-none absolute right-0 top-28 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl" />
+    <div className="relative h-screen overflow-hidden bg-slate-100">
+      <div className="pointer-events-none absolute right-0 top-28 h-72 w-72 rounded-full bg-indigo-300/10 blur-3xl" />
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div

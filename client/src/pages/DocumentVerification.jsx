@@ -61,7 +61,7 @@ export default function DocumentVerification() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.16),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.16),_transparent_32%)] pointer-events-none" />
+
       <div className="relative w-full max-w-md bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-100 fade-up">
 
         {/* Back Button */}
