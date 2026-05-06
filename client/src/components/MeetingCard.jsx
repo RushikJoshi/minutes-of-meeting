@@ -7,7 +7,7 @@ export default function MeetingCard({ meeting, onEdit, onDelete }) {
     <article className="page-card p-4 flex flex-col h-full justify-between">
       <div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase ${statusTone(meeting.status)}`}>
               {meeting.status || "scheduled"}
             </div>
@@ -18,10 +18,10 @@ export default function MeetingCard({ meeting, onEdit, onDelete }) {
               {meeting.agenda || "No agenda added yet."}
             </p>
           </div>
-          <div className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-right">
+          <div className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-right min-w-[100px]">
             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{meeting.priority || 'medium'}</div>
             <div className="mt-1 text-xs font-semibold text-slate-700">{new Date(meeting.date).toLocaleDateString()}</div>
-            <div className="mt-0.5 text-[10px] text-slate-500">{formatMeetingTime(meeting)}</div>
+            <div className="mt-0.5 text-[10px] text-slate-500 whitespace-nowrap">{formatMeetingTime(meeting)}</div>
           </div>
         </div>
 

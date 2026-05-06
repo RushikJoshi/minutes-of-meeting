@@ -22,7 +22,7 @@ export default function Documents() {
   });
 
   const filteredMeetings = meetings?.filter(m => 
-    m.title.toLowerCase().includes(searchTerm.toLowerCase())
+    m.isMomGenerated && m.title.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   // Pagination Logic
@@ -45,7 +45,6 @@ export default function Documents() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">MOM Repository</h1>
-              <p className="text-slate-500 mt-1 text-sm font-medium">Access and manage all your generated meeting minutes and PDF reports.</p>
             </div>
             
             <div className="relative group max-w-md w-full">

@@ -53,7 +53,6 @@ export default function Calendar() {
               <span className="text-xs font-black text-blue-600 uppercase tracking-widest">Scheduler</span>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">Meeting Calendar</h1>
-            <p className="mt-1 text-slate-500 font-medium text-sm">Visualize your team's agenda and stay ahead of deadlines.</p>
           </div>
           
           <Link 
@@ -105,7 +104,9 @@ export default function Calendar() {
                 <div className="h-px bg-slate-50" />
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-slate-600">Pending MOMs</span>
-                  <span className="text-xl font-black text-blue-600">3</span>
+                  <span className="text-xl font-black text-blue-600">
+                    {meetingsQuery.data?.filter(m => m.status === 'completed' && !m.isMomGenerated).length || 0}
+                  </span>
                 </div>
               </div>
             </div>

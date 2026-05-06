@@ -148,7 +148,6 @@ export default function TemplateBuilder() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">MOM Template Designer</h2>
-            <p className="text-sm text-slate-500 mt-1">Design the master structure for your automated meeting minutes.</p>
           </div>
           
           <div className="flex items-center gap-3">

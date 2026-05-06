@@ -32,17 +32,24 @@ export function meetingToCalendarEvent(meeting) {
 
 export function formatMeetingTime(meeting) {
   if (!meeting?.startTime) return "Time not set";
-  if (typeof meeting.startTime === "string" && meeting.startTime.includes(":")) {
+  
+  const format = (d) => {
+    if (!d || Number.isNaN(new Date(d).getTime())) return "";
+    return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // If it's a simple time string like "10:30" or "10:30 AM"
+  if (typeof meeting.startTime === "string" && !meeting.startTime.includes("T") && meeting.startTime.includes(":") && meeting.startTime.length < 12) {
     if (meeting.endTime) return `${meeting.startTime} - ${meeting.endTime}`;
     return meeting.startTime;
   }
   
-  const start = new Date(meeting.startTime);
-  const end = meeting.endTime ? new Date(meeting.endTime) : null;
-  const format = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Otherwise, treat as Date objects/ISO strings
+  const startTime = format(meeting.startTime);
+  const endTime = meeting.endTime ? format(meeting.endTime) : null;
 
-  if (end) return `${format(start)} - ${format(end)}`;
-  return format(start);
+  if (endTime) return `${startTime} - ${endTime}`;
+  return startTime || meeting.startTime;
 }
 
 export function participantLabel(participant) {

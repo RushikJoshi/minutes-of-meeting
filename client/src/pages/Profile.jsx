@@ -64,7 +64,6 @@ export default function Profile() {
         <div className="mb-12 flex items-end justify-between border-b border-slate-100 pb-8">
           <div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">My Profile</h1>
-            <p className="text-sm font-medium text-slate-500 mt-2">Personalize your account and system preferences.</p>
           </div>
           
           <div className="flex gap-3">

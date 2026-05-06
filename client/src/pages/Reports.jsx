@@ -43,7 +43,6 @@ export default function Reports() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Workspace Analytics</h1>
-            <p className="mt-1 text-slate-500">Comprehensive overview of your meetings and performance.</p>
           </div>
         </div>
 
