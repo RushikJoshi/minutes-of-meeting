@@ -7,7 +7,7 @@ const { requireAuth } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 router.post(
-  "/auth/register",
+  "/register",
   validateBody(
     z.object({
       email: z.string().email(),
@@ -19,7 +19,7 @@ router.post(
 );
 
 router.post(
-  "/auth/login",
+  "/login",
   validateBody(
     z.object({
       email: z.string().email(),
@@ -29,7 +29,7 @@ router.post(
   login
 );
 
-router.get("/auth/me", requireAuth, me);
+router.get("/me", requireAuth, me);
 
 // Verhoeff Algorithm matrices for Aadhar Validation
 const d = [

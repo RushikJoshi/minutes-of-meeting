@@ -86,13 +86,9 @@ const publicRegisterVisitor = async (req, res) => {
       document: { type: documentType, number: documentNumber, status: "PENDING" }
     });
 
-    // 3. Send Emails
-    try {
-      await emailService.sendApprovalRequestToHost(visitor);
-      await emailService.sendPendingNotificationToVisitor(visitor);
-    } catch (mailErr) {
-      console.error("Mail Error:", mailErr.message);
-    }
+    // 3. Send Emails in background to avoid blocking the user
+    emailService.sendApprovalRequestToHost(visitor).catch(err => console.error("Host Notify Error:", err.message));
+    emailService.sendPendingNotificationToVisitor(visitor).catch(err => console.error("Visitor Notify Error:", err.message));
 
     res.json({ success: true, message: "Registration Successful", visitor });
   } catch (err) {

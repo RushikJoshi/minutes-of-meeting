@@ -40,6 +40,8 @@ function StatCard({ label, value, icon: Icon, color }) {
   );
 }
 
+import logoIcon from "../assets/logo_icon_final.png";
+
 export default function ReceptionistDashboard() {
   const [visitors, setVisitors]           = useState([]);
   const [loading, setLoading]             = useState(true);
@@ -119,7 +121,7 @@ export default function ReceptionistDashboard() {
           <div class="flex justify-between items-end mb-4">
             <div>
               <div class="text-2xl font-black tracking-tighter text-slate-900">MOM <span class="text-blue-600">SYSTEM</span></div>
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enterprise Solutions</div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gitakshmi Technologies PVT LTD</div>
             </div>
             <div class="text-right">
               <h2 class="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Visitor Visit Record</h2>
@@ -272,8 +274,10 @@ export default function ReceptionistDashboard() {
       <nav className="bg-slate-900 text-white shadow-2xl">
         <div className="w-full px-4 sm:px-6 lg:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center font-semibold text-lg shadow-lg">R</div>
-            <div>
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg p-2.5 transition-transform hover:scale-105 overflow-hidden">
+              <img src={logoIcon} alt="Logo" className="w-full h-full object-contain object-center" />
+            </div>
+            <div className="flex flex-col justify-center">
               <h1 className="text-xl font-semibold tracking-tight">Reception Console</h1>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Security & Visitor Management</p>
             </div>

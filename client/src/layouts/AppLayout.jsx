@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useWorkspace } from "../hooks/useWorkspace";
 import { useState, useEffect, useRef } from "react";
 import API from "../api/api";
+import brandedIcon from "../assets/logo_icon_final.png";
 
 function SidebarNavItem({ to, children, icon, isCollapsed }) {
   return (
@@ -191,16 +192,21 @@ export default function AppLayout() {
         <div className="flex h-full flex-col min-h-0">
           {/* Sidebar Header */}
           <div className={`shrink-0 flex items-center border-b border-slate-200 ${sidebarCollapsed ? "justify-center p-2 h-16" : "justify-between p-4"}`}>
-            {!sidebarCollapsed && (
-              <Link to="/dashboard" className="flex items-center gap-3 group">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">M</span>
-                </div>
-                <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+            <Link to="/dashboard" className="flex items-center gap-2 group">
+              <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
+                {/* Official branded icon image from the provided crop */}
+                <img 
+                  src={brandedIcon} 
+                  alt="GT Logo" 
+                  className="w-9 h-9 object-contain transition-transform duration-200 group-hover:scale-110" 
+                />
+              </div>
+              {!sidebarCollapsed && (
+                <span className="font-bold text-xl bg-gradient-to-r from-[#00358E] to-blue-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200 ml-1">
                   MOM System
                 </span>
-              </Link>
-            )}
+              )}
+            </Link>
 
             {/* Desktop Collapse Button */}
             <button

@@ -80,6 +80,12 @@ async function buildParticipant(raw, organizerUser) {
 
 async function normalizeParticipants({ rawParticipants, organizerUser }) {
   const list = Array.isArray(rawParticipants) ? rawParticipants : [];
+  
+  // Extract all emails to batch lookup users
+  const emails = list.map(p => normalizeEmail(typeof p === 'string' ? p : p.email)).filter(Boolean);
+  const matchedUsers = await User.find({ email: { $in: emails } }).select("_id name email");
+  const userMap = new Map(matchedUsers.map(u => [u.email.toLowerCase(), u]));
+
   const organizerParticipant = organizerUser?.email
     ? await buildParticipant(
       {
@@ -95,13 +101,46 @@ async function normalizeParticipants({ rawParticipants, organizerUser }) {
     : null;
 
   const mapped = [organizerParticipant];
+  
   for (const raw of list) {
-    const participant = await buildParticipant(raw, organizerUser);
-    if (participant) mapped.push(participant);
-  }
-  const seen = new Set();
+    const email = normalizeEmail(typeof raw === 'string' ? raw : raw.email);
+    if (!email) continue;
+    
+    const matchedUser = userMap.get(email);
+    const isOrganizer = organizerUser?.email && email === normalizeEmail(organizerUser.email);
 
+    if (typeof raw === "string") {
+      mapped.push({
+        kind: matchedUser || isOrganizer ? "user" : "external",
+        userId: matchedUser?._id || (isOrganizer ? organizerUser._id : undefined),
+        email,
+        name: matchedUser?.name || email.split("@")[0],
+        inviteToken: generateInviteToken(),
+        status: isOrganizer ? "joined" : "invited",
+        rsvp: isOrganizer ? "yes" : "unknown",
+        joinedAt: isOrganizer ? new Date() : undefined,
+        invitationAcceptedAt: isOrganizer ? new Date() : undefined,
+      });
+    } else {
+      mapped.push({
+        kind: matchedUser || isOrganizer ? "user" : "external",
+        userId: matchedUser?._id || (isOrganizer ? organizerUser._id : undefined),
+        email,
+        name: String(raw.name || matchedUser?.name || email.split("@")[0]).trim(),
+        role: raw.role || (isOrganizer ? "owner" : "viewer"),
+        inviteToken: raw.inviteToken || generateInviteToken(),
+        status: raw.status || (isOrganizer ? "joined" : "invited"),
+        rsvp: raw.rsvp || (isOrganizer ? "yes" : "unknown"),
+        joinedAt: raw.joinedAt || (isOrganizer ? new Date() : undefined),
+        invitationSentAt: raw.invitationSentAt,
+        invitationAcceptedAt: raw.invitationAcceptedAt || (isOrganizer ? new Date() : undefined),
+      });
+    }
+  }
+
+  const seen = new Set();
   return mapped.filter((participant) => {
+    if (!participant) return false;
     const key = participant.email;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -546,20 +585,20 @@ const createMeeting = asyncHandler(async (req, res) => {
   const invitedParticipants = meeting.participants.filter(
     (participant) => participant.email !== normalizeEmail(req.user.email)
   );
-  const inviteResult = await withTimeout(
+
+  // Background the invitation process to respond faster to the user
+  if (invitedParticipants.length > 0) {
     sendInvitations({
       meeting,
       participants: invitedParticipants,
       cc: getInviteCcList(req),
-    }),
-    Number.parseInt(process.env.MEETING_INVITE_TIMEOUT_MS || "12000", 10),
-    { sent: 0, failed: invitedParticipants.map((p) => ({ email: p.email, error: "Invite sending timed out" })), timedOut: true }
-  );
+    }).catch(err => console.error("[Invitations] Background send failed:", err.message));
+  }
 
   res.status(201).json({
     ...meeting.toObject(),
     participants: meeting.participants.map(sanitizeParticipant),
-    inviteSummary: inviteResult,
+    inviteSummary: { sent: 0, status: "processing" },
   });
 });
 

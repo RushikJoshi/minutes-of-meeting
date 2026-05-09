@@ -6,7 +6,8 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth; font-size: 13px;
+    scroll-behavior: smooth;
+    font-size: 13px;
   }
 
   body {
@@ -42,12 +43,15 @@
   .word-editor-content table {
     counter-reset: rowNumber;
   }
+
   .word-editor-content table tr {
     counter-increment: rowNumber;
   }
+
   .word-editor-content table tr:first-child {
     counter-reset: rowNumber;
   }
+
   .word-editor-content table tr:not(:first-child) td:first-child p::before {
     content: counter(rowNumber) " ";
     font-weight: 700;
@@ -229,7 +233,7 @@
     @apply text-slate-100;
   }
 
-  .word-editor-content > * + * {
+  .word-editor-content>*+* {
     @apply mt-4;
   }
 

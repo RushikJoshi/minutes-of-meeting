@@ -259,28 +259,43 @@ class EmailService {
     const address = visitor.address || "Not Specified";
 
     const html = `
-      <div style="font-family:sans-serif; background:#f1f5f9; padding:40px;">
-        <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:24px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-          <div style="padding:40px 30px; background:#7c3aed; color:#fff; text-align:center;">
-            <div style="font-size:40px; margin-bottom:15px;">👋</div>
-            <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">New Visitor Request</h2>
-            <p style="opacity:0.9; margin-top:10px; font-size:15px;">A visitor is waiting for your approval.</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; padding: 20px; color: #1e293b;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <div style="padding: 40px 20px; background-color: #7c3aed; color: #ffffff; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">👋</div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800;">New Visitor Request</h2>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">A visitor is waiting for your approval.</p>
           </div>
           
-          <div style="padding:40px 35px; text-align:center;">
-            <div style="padding:25px; background:#f8fafc; border-radius:16px; margin-bottom:30px; border:1px solid #e2e8f0; font-size:15px; color:#475569; line-height:1.6;">
-              <p style="margin:0 0 10px 0; font-weight:700; color:#1e293b;">Visitor: ${this.escapeHtml(visitor.name)}</p>
-              <p style="margin:0;">Please review the attached <strong>PDF file</strong> for complete details and photo of the visitor.</p>
+          <div style="padding: 32px 24px; text-align: center;">
+            <div style="padding: 20px; background-color: #f1f5f9; border-radius: 12px; margin-bottom: 32px; border: 1px solid #e2e8f0; text-align: left;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Visitor Name</p>
+              <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: 800; color: #1e293b;">${this.escapeHtml(visitor.name)}</p>
+              <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">Please review the attached <b>PDF file</b> for visitor details and identity proof.</p>
             </div>
             
-            <div style="display:block; margin-top:10px;">
-              <a href="${baseUrl}/api/visitors/action/approve/${visitor._id}" style="display:inline-block; padding:18px 30px; background:#10b981; color:#fff; text-decoration:none; border-radius:16px; font-weight:bold; margin-bottom:15px; width:220px; font-size:14px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 10px 20px rgba(16,185,129,0.15);">Approve Visit</a>
-              <br/>
-              <a href="${baseUrl}/api/visitors/action/reject/${visitor._id}" style="display:inline-block; padding:15px 30px; background:#fff; color:#ef4444; text-decoration:none; border-radius:16px; font-weight:bold; width:220px; font-size:14px; text-transform:uppercase; letter-spacing:1px; border:2px solid #fee2e2;">Reject Request</a>
+            <div style="margin: 0 auto; width: 100%;">
+              <a href="${baseUrl}/api/visitors/action/approve/${visitor._id}" 
+                 style="display: block; max-width: 280px; margin: 0 auto 16px auto; padding: 18px 24px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                 Approve Visit
+              </a>
+              <a href="${baseUrl}/api/visitors/action/reject/${visitor._id}" 
+                 style="display: block; max-width: 280px; margin: 0 auto 0 auto; padding: 16px 24px; background-color: #ffffff; color: #ef4444; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border: 2px solid #fee2e2;">
+                 Reject Request
+              </a>
             </div>
           </div>
+          
+          <div style="padding: 0 24px 32px 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+            <p style="margin: 24px 0 8px 0; font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Helpful Links</p>
+            <p style="margin: 0; font-size: 12px; color: #64748b;">
+              Direct Link: <a href="${baseUrl}/api/visitors/action/approve/${visitor._id}" style="color: #7c3aed;">Approve</a> | <a href="${baseUrl}/api/visitors/action/reject/${visitor._id}" style="color: #ef4444;">Reject</a>
+            </p>
+          </div>
         </div>
-        <p style="text-align:center; color:#94a3b8; font-size:12px; margin-top:25px;">This is an automated request from GT MOM Visitor Management System.</p>
+        <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 24px; font-weight: 500;">
+          GT MOM Visitor Management • Automated System
+        </p>
       </div>
     `;
 

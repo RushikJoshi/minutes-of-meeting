@@ -59,7 +59,7 @@ app.use(meetingRoutes);
 app.use(momRoutes);
 app.use(shareRoutes);
 app.use(pdfRoutes);
-app.use(authRoutes);
+app.use("/auth", authRoutes);
 app.use(userRoutes);
 app.use(attachmentRoutes);
 app.use(integrationRoutes);

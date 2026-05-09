@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import API from "../api/api";
 
 export default function DocumentVerification() {
   const navigate = useNavigate();
@@ -28,14 +29,8 @@ export default function DocumentVerification() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/verify-documents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
+      const res = await API.post("/auth/verify-documents", formData);
+      const data = res.data;
 
       if (!data.success) {
         toast.error(data.message || "Verification Failed");

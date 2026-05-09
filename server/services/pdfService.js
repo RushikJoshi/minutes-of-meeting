@@ -1,4 +1,6 @@
 const puppeteer = require("puppeteer-core");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * PDF Service to generate meeting minutes reports.
@@ -325,11 +327,28 @@ class PdfService {
     });
     const page = await browser.newPage();
 
-    const displayPhotoUrl = visitor.photoUrl
-      ? (visitor.photoUrl.startsWith('data:') || visitor.photoUrl.startsWith('http')
-        ? visitor.photoUrl
-        : `${baseUrl}${visitor.photoUrl}`)
-      : null;
+    let displayPhotoUrl = null;
+    if (visitor.photoUrl) {
+      if (visitor.photoUrl.startsWith('data:') || visitor.photoUrl.startsWith('http')) {
+        displayPhotoUrl = visitor.photoUrl;
+      } else {
+        // Handle local paths like /uploads/visitor_...
+        try {
+          const absolutePath = path.join(__dirname, "..", visitor.photoUrl);
+          if (fs.existsSync(absolutePath)) {
+            const base64 = fs.readFileSync(absolutePath, "base64");
+            const ext = path.extname(absolutePath).toLowerCase().replace(".", "") || "jpeg";
+            displayPhotoUrl = `data:image/${ext};base64,${base64}`;
+          } else {
+            console.warn(`[PDF] Photo file not found at: ${absolutePath}`);
+            displayPhotoUrl = `${baseUrl}${visitor.photoUrl}`;
+          }
+        } catch (err) {
+          console.error(`[PDF] Error reading photo for base64:`, err.message);
+          displayPhotoUrl = `${baseUrl}${visitor.photoUrl}`;
+        }
+      }
+    }
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -356,7 +375,7 @@ class PdfService {
       <body>
         <div class="header">
           <div>
-            <p style="font-size: 10px; font-weight: 800; color: #7c3aed; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.1em;">Visitor Pass System</p>
+            <p style="font-size: 10px; font-weight: 800; color: #7c3aed; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.1em;">Gitakshmi Technologies PVT LTD</p>
             <h1 class="title">Visitor Details</h1>
           </div>
           <div class="status">${visitor.status}</div>
@@ -395,8 +414,9 @@ class PdfService {
         <div class="section-title">Meeting Details</div>
         <table class="details-table">
           <tr>
-            <td style="width: 33%"><div class="label">Whom to Meet</div><div class="value">${visitor.meetingWithName}</div></td>
-            <td style="width: 33%"><div class="label">Purpose</div><div class="value">${visitor.purpose}</div></td>
+            <td style="width: 25%"><div class="label">Whom to Meet</div><div class="value">${visitor.meetingWithName}</div></td>
+            <td style="width: 25%"><div class="label">Purpose</div><div class="value">${visitor.purpose}</div></td>
+            <td style="width: 25%"><div class="label">Security Code</div><div class="value" style="letter-spacing: 0.2em;">${visitor.entryCode || '—'}</div></td>
             <td><div class="label">Date & Time</div><div class="value">${visitor.meetingTime ? new Date(visitor.meetingTime).toLocaleString() : 'N/A'}</div></td>
           </tr>
         </table>
