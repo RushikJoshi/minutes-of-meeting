@@ -57,7 +57,7 @@ export default function Login() {
           </h1>
 
           <p className="mt-8 text-xl leading-relaxed text-slate-500 font-medium max-w-lg">
-            Streamline your team's workflow with visual boards, smart tracking, and real-time collaboration.
+            Manage Meetings, Visitors & Tasks Seamlessly.
           </p>
         </div>
       </div>
