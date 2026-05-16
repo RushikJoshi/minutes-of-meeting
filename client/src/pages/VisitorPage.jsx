@@ -1,3 +1,4 @@
+/*
 import VisitorForm from "../components/VisitorForm";
 
 export default function VisitorPage() {
@@ -7,4 +8,9 @@ export default function VisitorPage() {
       <VisitorForm />
     </div>
   );
+}
+*/
+
+export default function VisitorPage() {
+  return null;
 }

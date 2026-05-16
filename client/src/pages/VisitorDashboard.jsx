@@ -1,3 +1,4 @@
+/*
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
@@ -248,4 +249,9 @@ export default function VisitorDashboard() {
       </div>
     </div>
   );
+}
+*/
+
+export default function VisitorDashboard() {
+  return null;
 }

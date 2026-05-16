@@ -1,3 +1,4 @@
+/*
 const express = require("express");
 const router = express.Router();
 const visitorController = require("../controllers/visitorController");
@@ -79,4 +80,9 @@ router.post("/check-in/:id", async (req, res) => {
 router.post("/check-out/:id", visitorController.checkOutVisitor);
 router.get("/", visitorController.getVisitors);
 
+module.exports = router;
+*/
+
+const express = require("express");
+const router = express.Router();
 module.exports = router;

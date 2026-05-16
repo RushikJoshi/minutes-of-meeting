@@ -234,6 +234,7 @@ class EmailService {
     return { sent, failed };
   }
 
+  /*
   // 1. Send Request to Host (Approve/Reject)
   async sendApprovalRequestToHost(visitor) {
     if (!this.isConfigured()) return;
@@ -325,6 +326,7 @@ class EmailService {
       console.error(`❌ Mail Error (Approval Request):`, err.message);
     }
   }
+  */
 
   async sendMeetingReminder({ meeting, recipients, minutesBefore = 0 }) {
     if (!this.isConfigured()) {
@@ -402,6 +404,7 @@ class EmailService {
     }
   }
 
+  /*
   // 2. Send Pending Email to Visitor
   async sendPendingNotificationToVisitor(visitor) {
     if (!this.isConfigured()) return;
@@ -437,7 +440,9 @@ class EmailService {
       console.error(`❌ Mail Error (Pending Notify):`, err.message);
     }
   }
+  */
 
+  /*
   // 3. Send Final Result to Visitor (Approved/Rejected)
   async sendFinalResultToVisitor(visitor) {
     if (!this.isConfigured()) return;
@@ -498,6 +503,7 @@ class EmailService {
       console.error(`❌ Mail Error (Final Result):`, err.message);
     }
   }
+  */
 }
 
 module.exports = new EmailService();

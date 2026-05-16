@@ -40,8 +40,22 @@ export default function AuthProvider({ children }) {
     }
 
     loadMe();
+
+    // Global 401 interceptor to handle session expiry
+    const interceptor = API.interceptors.response.use(
+      (res) => res,
+      (err) => {
+        if (err.response?.status === 401) {
+          setUser(null);
+          setToken("");
+        }
+        return Promise.reject(err);
+      }
+    );
+
     return () => {
       cancelled = true;
+      API.interceptors.response.eject(interceptor);
     };
   }, [token]);
 

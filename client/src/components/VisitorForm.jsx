@@ -1,8 +1,7 @@
-
+/*
 import React, { useState, useEffect } from "react";
 import axios from "../api/api";
 import { toast } from "react-hot-toast";
-
 
 const VisitorForm = ({ onSuccess }) => {
   const [meetings, setMeetings] = useState([]);
@@ -151,3 +150,8 @@ const VisitorForm = ({ onSuccess }) => {
 };
 
 export default VisitorForm;
+*/
+
+export default function VisitorForm() {
+  return null;
+}

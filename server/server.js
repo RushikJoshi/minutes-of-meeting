@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
+// Trigger restart to apply updated IP configuration from .env
+
 
 const connectDB = require("./utils/connectDB");
 const { notFound, errorHandler } = require("./utils/errorMiddleware");
@@ -39,8 +41,8 @@ const aiRoutes = require("./routes/aiRoutes");
 const editorTemplateRoutes = require("./routes/editorTemplateRoutes");
 
 // ✅ NEW: Visitor Routes
-const visitorRoutes = require("./routes/visitorRoutes");
-const metaRoutes = require("./routes/metaRoutes");
+// const visitorRoutes = require("./routes/visitorRoutes");
+// const metaRoutes = require("./routes/metaRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 
 /* ===========================
@@ -70,8 +72,8 @@ app.use(aiRoutes);
 app.use(editorTemplateRoutes);
 
 // ✅ IMPORTANT: Visitor API Route
-app.use("/api/visitors", visitorRoutes);
-app.use("/api/meta", metaRoutes);
+// app.use("/api/visitors", visitorRoutes);
+// app.use("/api/meta", metaRoutes);
 app.use(reportRoutes);
 
 // Add meeting routes

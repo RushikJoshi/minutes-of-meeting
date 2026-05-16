@@ -17,15 +17,15 @@ import ActionItems from "./pages/ActionItems";
 import MinutesEditor from "./pages/MinutesEditor";
 import TemplateBuilder from "./pages/TemplateBuilder";
 import JoinMeeting from "./pages/JoinMeeting";
-import VisitorPage from "./pages/VisitorPage";
+// import VisitorPage from "./pages/VisitorPage";
 import RoleSelection from "./pages/RoleSelection";
 import DocumentVerification from "./pages/DocumentVerification";
 import AdminDashboard from "./pages/AdminDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
-import VisitorDashboard from "./pages/VisitorDashboard";
-import VisitorFormPublic from "./pages/VisitorFormPublic";
-import ReceptionistDashboard from "./pages/ReceptionistDashboard";
-import VisitorVerification from "./pages/VisitorVerification";
+// import VisitorDashboard from "./pages/VisitorDashboard";
+// import VisitorFormPublic from "./pages/VisitorFormPublic";
+// import ReceptionistDashboard from "./pages/ReceptionistDashboard";
+// import VisitorVerification from "./pages/VisitorVerification";
 import Profile from "./pages/Profile";
 import { useEffect, useState } from "react";
 import API from "./api/api";
@@ -48,66 +48,69 @@ function App() {
         if (res.status === 200) {
           const meetings = Array.isArray(res.data) ? res.data : [];
           if (meetings.length > 0) {
-            const meeting = meetings[0];
-
-            // Calculate meeting start time
             const now = new Date();
-            let meetingStartTime = null;
+            let nextMeeting = null;
+            let minMinutesUntilStart = Infinity;
 
-            if (meeting.date && meeting.startTime) {
-              const meetingDate = new Date(meeting.date);
-              const timeStr = meeting.startTime.trim();
+            for (const meeting of meetings) {
+              let meetingStartTime = null;
 
-              // Try to parse various time formats
-              let timeMatch = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-              if (timeMatch) {
-                // 12-hour format: "10:00 AM"
-                let hours = parseInt(timeMatch[1]);
-                const minutes = parseInt(timeMatch[2]);
-                const ampm = timeMatch[3].toUpperCase();
+              if (meeting.date && meeting.startTime) {
+                const meetingDate = new Date(meeting.date);
+                const timeStr = meeting.startTime.trim();
 
-                if (ampm === 'PM' && hours !== 12) hours += 12;
-                if (ampm === 'AM' && hours === 12) hours = 0;
-
-                meetingDate.setHours(hours, minutes, 0, 0);
-                meetingStartTime = meetingDate;
-              } else {
-                // Try 24-hour format: "14:30"
-                timeMatch = timeStr.match(/(\d+):(\d+)/);
+                let timeMatch = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
                 if (timeMatch) {
-                  const hours = parseInt(timeMatch[1]);
+                  let hours = parseInt(timeMatch[1]);
                   const minutes = parseInt(timeMatch[2]);
+                  const ampm = timeMatch[3].toUpperCase();
 
-                  if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-                    meetingDate.setHours(hours, minutes, 0, 0);
-                    meetingStartTime = meetingDate;
+                  if (ampm === 'PM' && hours !== 12) hours += 12;
+                  if (ampm === 'AM' && hours === 12) hours = 0;
+
+                  meetingDate.setHours(hours, minutes, 0, 0);
+                  meetingStartTime = meetingDate;
+                } else {
+                  timeMatch = timeStr.match(/(\d+):(\d+)/);
+                  if (timeMatch) {
+                    const hours = parseInt(timeMatch[1]);
+                    const minutes = parseInt(timeMatch[2]);
+
+                    if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+                      meetingDate.setHours(hours, minutes, 0, 0);
+                      meetingStartTime = meetingDate;
+                    }
                   }
+                }
+              }
+
+              if (meetingStartTime && meetingStartTime > now) {
+                const timeDiff = meetingStartTime - now;
+                const minutesUntilStart = Math.ceil(timeDiff / (1000 * 60));
+
+                if (minutesUntilStart > 0 && minutesUntilStart < minMinutesUntilStart) {
+                  minMinutesUntilStart = minutesUntilStart;
+                  nextMeeting = meeting;
                 }
               }
             }
 
-            if (meetingStartTime && meetingStartTime > now) {
-              const timeDiff = meetingStartTime - now;
-              const minutesUntilStart = Math.ceil(timeDiff / (1000 * 60));
-
-              // Show notification for meetings starting within 10 minutes
-              if (minutesUntilStart <= 10 && minutesUntilStart > 0) {
-                setCurrentMeeting(meeting);
-                setCountdownMinutes(minutesUntilStart);
-              } else if (currentMeeting && currentMeeting._id === meeting._id && minutesUntilStart <= 0) {
-                // Meeting has started, clear the notification
-                setCurrentMeeting(null);
-                setCountdownMinutes(null);
-              }
+            if (nextMeeting && minMinutesUntilStart <= 10) {
+              setCurrentMeeting(nextMeeting);
+              setCountdownMinutes(minMinutesUntilStart);
+            } else if (currentMeeting) {
+              setCurrentMeeting(null);
+              setCountdownMinutes(null);
             }
           } else {
-            // No upcoming meetings, clear any existing notification
             setCurrentMeeting(null);
             setCountdownMinutes(null);
           }
         }
       } catch (err) {
-        console.log("Error checking upcoming meetings:", err);
+        if (err?.response?.status !== 401) {
+          console.log("Error checking upcoming meetings:", err);
+        }
       }
     };
 
@@ -121,10 +124,12 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        {/* 
         <Route path="/v/:token" element={<VisitorFormPublic />} />
         <Route path="/v/:name/:token" element={<VisitorFormPublic />} />
         <Route path="/visitor-form/*" element={<VisitorFormPublic />} />
         <Route path="/visitor/verify/:token" element={<VisitorVerification />} />
+        */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -132,9 +137,11 @@ function App() {
         <Route path="/document-verification" element={<DocumentVerification />} />
         <Route path="/share/:token" element={<ShareView />} />
         <Route path="/join/:id" element={<JoinMeeting />} />
+        {/* 
         <Route path="/visitor-dashboard" element={<VisitorDashboard />} />
         <Route path="/receptionist-dashboard" element={<ReceptionistDashboard />} />
         <Route path="/visitor-panel" element={<VisitorPage />} />
+        */}
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>

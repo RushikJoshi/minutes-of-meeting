@@ -1,3 +1,4 @@
+/*
 import React, { useState, useEffect } from "react";
 import {
   Users, Search, CheckCircle, LogIn, LogOut,
@@ -540,4 +541,9 @@ export default function ReceptionistDashboard() {
       </div>
     </div>
   );
+}
+*/
+
+export default function ReceptionistDashboard() {
+  return null;
 }

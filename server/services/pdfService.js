@@ -316,9 +316,8 @@ class PdfService {
     return pdfBuffer;
   }
 
-  /**
-   * Generate PDF for Visitor Details
-   */
+  /*
+  // Generate PDF for Visitor Details
   async generateVisitorPdf(visitor, baseUrl) {
     const browser = await puppeteer.launch({
       headless: true,
@@ -438,6 +437,7 @@ class PdfService {
     await browser.close();
     return pdfBuffer;
   }
+  */
 }
 
 module.exports = new PdfService();

@@ -1,3 +1,4 @@
+/*
 const Visitor = require("../models/Visitor");
 const VisitorToken = require("../models/VisitorToken");
 const emailService = require("../services/emailService");
@@ -161,12 +162,12 @@ const handleHostAction = async (req, res) => {
 
     await emailService.sendFinalResultToVisitor(visitor);
 
-    res.send(`
+    res.send(\`
       <div style="font-family:sans-serif; text-align:center; padding:100px;">
-        <h1 style="color:${action === 'approve' ? '#10b981' : '#ef4444'};">Request ${action === 'approve' ? 'Approved' : 'Rejected'}!</h1>
+        <h1 style="color:\${action === 'approve' ? '#10b981' : '#ef4444'};">Request \${action === 'approve' ? 'Approved' : 'Rejected'}!</h1>
         <p>Notification sent to visitor.</p>
       </div>
-    `);
+    \`);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -198,3 +199,6 @@ module.exports = {
     res.json(visitors);
   }
 };
+*/
+
+module.exports = {};

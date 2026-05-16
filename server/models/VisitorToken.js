@@ -1,3 +1,4 @@
+/*
 const mongoose = require("mongoose");
 
 const visitorTokenSchema = new mongoose.Schema({
@@ -8,4 +9,9 @@ const visitorTokenSchema = new mongoose.Schema({
   expiresAt: { type: Date, required: true }
 }, { timestamps: true });
 
+module.exports = mongoose.model("VisitorToken", visitorTokenSchema);
+*/
+
+const mongoose = require("mongoose");
+const visitorTokenSchema = new mongoose.Schema({}, { strict: false });
 module.exports = mongoose.model("VisitorToken", visitorTokenSchema);

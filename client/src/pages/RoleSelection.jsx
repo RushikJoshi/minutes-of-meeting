@@ -27,6 +27,7 @@ export default function RoleSelection() {
       icon: <UserCircle className="w-6 h-6" />,
       color: "indigo",
     },
+    /*
     {
       id: "receptionist",
       title: "Receptionist",
@@ -41,9 +42,11 @@ export default function RoleSelection() {
       icon: <User className="w-6 h-6" />,
       color: "purple",
     },
+    */
   ];
 
   const handleRoleSelect = async (role) => {
+    /*
     if (role === "visitor") {
       setSelectedRole("visitor");
       return;
@@ -52,6 +55,7 @@ export default function RoleSelection() {
       navigate("/receptionist-dashboard");
       return;
     }
+    */
     localStorage.setItem("pendingRole", role);
     navigate("/document-verification", { state: { role } });
   };
@@ -170,93 +174,12 @@ export default function RoleSelection() {
               <ArrowLeft className="w-5 h-5 text-slate-500" />
             </button>
 
+            {/* 
             {!qrData ? (
-              <form onSubmit={generateVisitorQR} className="space-y-4">
-                <h3 className="text-lg font-bold text-slate-900">Visitor Setup</h3>
-                <p className="text-sm text-slate-500">Enter the visitor's name to generate a one-time secure registration link.</p>
-                <div>
-                  <input
-                    className="input-field w-full px-4 py-3 border rounded-xl focus:ring focus:ring-purple-200 text-center text-lg font-semibold"
-                    value={visitorName}
-                    onChange={(e) => setVisitorName(e.target.value)}
-                    placeholder="Enter Visitor Full Name"
-                    required
-                  />
-                </div>
-                <button
-                  disabled={loading}
-                  type="submit"
-                  className="w-full py-4 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition shadow-lg shadow-purple-100"
-                >
-                  {loading ? "Generating..." : "Generate Secure Link"}
-                </button>
-              </form>
-            ) : (
-              <div className="flex flex-col items-center space-y-6">
-                <div className="w-full">
-                  <h3 className="text-xl font-bold text-slate-900 mb-1">Link Generated!</h3>
-                  <p className="text-sm text-slate-500 mb-4">The secure registration link for {visitorName} is ready.</p>
-                </div>
-
-                <div className="w-full flex flex-col items-center mb-6" />
-
-                <div className="grid grid-cols-1 gap-3 w-full">
-                  <button
-                    onClick={() => window.open(qrData, "_blank")}
-                    className="bg-purple-600 hover:bg-purple-700 text-white py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-3 transition shadow-lg shadow-purple-200"
-                  >
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                      <span className="text-xl">📄</span>
-                    </div>
-                    Click to Open Register Form
-                  </button>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={copyToClipboard}
-                      className="flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition"
-                    >
-                      <Copy className="w-4 h-4" />
-                      Copy Link
-                    </button>
-                    <button
-                      onClick={shareToWhatsApp}
-                      className="flex items-center justify-center gap-2 py-3 bg-green-50 text-green-600 rounded-xl font-bold hover:bg-green-100 transition border border-green-100"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      WhatsApp
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={copyLinkOnly}
-                    className="flex items-center justify-center gap-2 py-3 bg-white text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition border border-slate-200"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copy URL Only
-                  </button>
-                </div>
-
-                <div className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight text-left mb-1">Direct URL:</p>
-                  <p className="text-slate-600 text-xs break-all font-mono text-left bg-white p-2 rounded-lg border border-slate-100">
-                    {qrData}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 p-3 bg-amber-50 text-amber-700 text-[10px] font-semibold rounded-lg w-full border border-amber-100">
-                  <span>⚠️</span>
-                  <span>This secure link is single-use and will expire in 10 minutes.</span>
-                </div>
-
-                <button
-                  onClick={() => { setQrData(null); setVisitorName(""); }}
-                  className="text-sm text-slate-400 hover:text-slate-800 underline font-semibold"
-                >
-                  Generate another link
-                </button>
-              </div>
+              ... (commented out visitor flow) ...
             )}
+            */}
+            <div className="text-slate-400 py-4">Visitor modules are moved to a separate project.</div>
           </div>
         )}
       </div>

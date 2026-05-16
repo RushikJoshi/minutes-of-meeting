@@ -1,3 +1,4 @@
+/*
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -372,4 +373,9 @@ export default function VisitorFormPublic() {
       </div>
     </div>
   );
+}
+*/
+
+export default function VisitorFormPublic() {
+  return null;
 }
