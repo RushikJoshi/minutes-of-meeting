@@ -6,15 +6,17 @@ async function requireAuth(req, res, next) {
     const header = req.headers.authorization || "";
     const [scheme, token] = header.split(" ");
     if (scheme !== "Bearer" || !token) {
-      res.status(401);
-      throw new Error("Unauthorized");
+      const err = new Error("Unauthorized");
+      err.statusCode = 401;
+      throw err;
     }
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(payload.sub).select("-passwordHash");
     if (!user) {
-      res.status(401);
-      throw new Error("Unauthorized");
+      const err = new Error("Unauthorized");
+      err.statusCode = 401;
+      throw err;
     }
 
     req.user = user;
