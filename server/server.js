@@ -39,10 +39,11 @@ const workspaceRoutes = require("./routes/workspaceRoutes");
 const actionItemRoutes = require("./routes/actionItemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const editorTemplateRoutes = require("./routes/editorTemplateRoutes");
+const apiKeyRoutes = require("./routes/apiKeyRoutes");
 
-// ✅ NEW: Visitor Routes
-// const visitorRoutes = require("./routes/visitorRoutes");
-// const metaRoutes = require("./routes/metaRoutes");
+// ✅ IMPORTANT: Visitor API Route
+// app.use("/api/visitors", visitorRoutes);
+// app.use("/api/meta", metaRoutes);
 const reportRoutes = require("./routes/reportRoutes");
 
 /* ===========================
@@ -55,29 +56,31 @@ app.get("/", (req, res) => {
 });
 
 /* ===========================
-   Main Routes
+   Main Routes (/api/v1)
 =========================== */
-app.use(meetingRoutes);
-app.use(momRoutes);
-app.use(shareRoutes);
-app.use(pdfRoutes);
-app.use("/auth", authRoutes);
-app.use(userRoutes);
-app.use(attachmentRoutes);
-app.use(integrationRoutes);
-app.use(notificationRoutes);
-app.use(workspaceRoutes);
-app.use(actionItemRoutes);
-app.use(aiRoutes);
-app.use(editorTemplateRoutes);
+const apiRouter = express.Router();
 
-// ✅ IMPORTANT: Visitor API Route
-// app.use("/api/visitors", visitorRoutes);
-// app.use("/api/meta", metaRoutes);
-app.use(reportRoutes);
+apiRouter.use(meetingRoutes);
+apiRouter.use(momRoutes);
+apiRouter.use(shareRoutes);
+apiRouter.use(pdfRoutes);
+apiRouter.use("/auth", authRoutes);
+apiRouter.use(userRoutes);
+apiRouter.use(attachmentRoutes);
+apiRouter.use(integrationRoutes);
+apiRouter.use(notificationRoutes);
+apiRouter.use(workspaceRoutes);
+apiRouter.use(actionItemRoutes);
+apiRouter.use(aiRoutes);
+apiRouter.use(editorTemplateRoutes);
+apiRouter.use(reportRoutes);
+apiRouter.use(apiKeyRoutes);
 
-// Add meeting routes
-app.use("/api/meetings", meetingRoutes);
+// Add meeting routes (if explicitly prefixed)
+apiRouter.use("/meetings", meetingRoutes);
+
+// Mount the v1 API
+app.use("/api/v1", apiRouter);
 
 /* ===========================
    Static Uploads

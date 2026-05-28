@@ -7,6 +7,8 @@ import IntegrationCard from "../components/IntegrationCard";
 export default function Settings() {
   const [ms, setMs] = useState({ connected: false });
   const [google, setGoogle] = useState({ connected: false });
+  const [apiKeys, setApiKeys] = useState([]);
+  const [newKeyData, setNewKeyData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const location = useLocation();
@@ -16,12 +18,14 @@ export default function Settings() {
     setLoading(true);
     setError("");
     try {
-      const [msRes, googleRes] = await Promise.all([
+      const [msRes, googleRes, apiKeysRes] = await Promise.all([
         API.get("/integrations/microsoft/status"),
         API.get("/integrations/google/status"),
+        API.get("/apikeys")
       ]);
       setMs(msRes.data || { connected: false });
       setGoogle(googleRes.data || { connected: false });
+      setApiKeys(apiKeysRes.data?.data || []);
     } catch (e) {
       setError(e?.response?.data?.message || "Failed to load integration status.");
       toast.error("Failed to load integrations.");
@@ -102,6 +106,30 @@ export default function Settings() {
     setMs(prev => ({ ...prev, autoSync: res.data.autoSync }));
   };
 
+  const handleGenerateApiKey = async () => {
+    const name = window.prompt("Enter a name for this API Key (e.g., 'My Mobile App'):");
+    if (!name) return;
+    try {
+      const res = await API.post("/apikeys", { name });
+      setNewKeyData(res.data.data);
+      toast.success("API Key generated!");
+      refresh();
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Failed to generate API Key");
+    }
+  };
+
+  const handleRevokeApiKey = async (id) => {
+    if (!window.confirm("Are you sure you want to revoke this API Key? Apps using it will immediately lose access.")) return;
+    try {
+      await API.delete(`/apikeys/${id}`);
+      toast.success("API Key revoked");
+      refresh();
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Failed to revoke API Key");
+    }
+  };
+
   return (
     <div className="page-shell">
       <div className="page-container fade-up">
@@ -162,6 +190,64 @@ export default function Settings() {
                 onSync={handleSyncGoogle}
                 onToggleAutoSync={handleToggleAutoSyncGoogle}
               />
+            </div>
+          </section>
+
+          {/* MASTER API SECTION */}
+          <section className="mt-12 border-t border-slate-200 pt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Developer API Keys</h2>
+                <p className="text-sm text-slate-500">Generate keys to connect third-party apps to your Minutes of Meeting account.</p>
+              </div>
+              <button onClick={handleGenerateApiKey} className="btn-primary py-2 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+                + Generate New Key
+              </button>
+            </div>
+
+            {newKeyData && (
+              <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-6">
+                <h3 className="text-lg font-bold text-green-900 mb-2">Save Your API Key Now</h3>
+                <p className="text-sm text-green-800 mb-4">This is the only time your API key will be shown. Please copy it and store it safely.</p>
+                <div className="flex items-center gap-4 bg-white p-3 rounded border border-green-200">
+                  <code className="text-sm font-mono flex-1 select-all">{newKeyData.key}</code>
+                  <button onClick={() => { navigator.clipboard.writeText(newKeyData.key); toast.success("Copied!"); }} className="text-sm text-blue-600 font-medium hover:underline">
+                    Copy
+                  </button>
+                </div>
+                <button onClick={() => setNewKeyData(null)} className="mt-4 text-sm text-green-700 hover:underline">I have saved it</button>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                  <tr>
+                    <th className="py-3 px-4 font-medium">Name</th>
+                    <th className="py-3 px-4 font-medium">Created On</th>
+                    <th className="py-3 px-4 font-medium">Last Used</th>
+                    <th className="py-3 px-4 font-medium text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {apiKeys.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="py-6 text-center text-slate-500">No API Keys generated yet.</td>
+                    </tr>
+                  ) : (
+                    apiKeys.map(key => (
+                      <tr key={key._id}>
+                        <td className="py-3 px-4 font-medium text-slate-900">{key.name}</td>
+                        <td className="py-3 px-4 text-slate-500">{new Date(key.createdAt).toLocaleDateString()}</td>
+                        <td className="py-3 px-4 text-slate-500">{key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}</td>
+                        <td className="py-3 px-4 text-right">
+                          <button onClick={() => handleRevokeApiKey(key._id)} className="text-red-600 hover:text-red-800 font-medium hover:underline">Revoke</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </section>
         </div>

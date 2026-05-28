@@ -11,7 +11,7 @@ const getBaseURL = () => {
 };
 
 const API = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: getBaseURL() + "/api/v1",
 });
 
 const WS_KEY = "mom.workspaceId";
