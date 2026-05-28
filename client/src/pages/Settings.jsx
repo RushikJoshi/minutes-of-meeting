@@ -9,6 +9,8 @@ export default function Settings() {
   const [google, setGoogle] = useState({ connected: false });
   const [apiKeys, setApiKeys] = useState([]);
   const [newKeyData, setNewKeyData] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const location = useLocation();
@@ -107,12 +109,13 @@ export default function Settings() {
   };
 
   const handleGenerateApiKey = async () => {
-    const name = window.prompt("Enter a name for this API Key (e.g., 'My Mobile App'):");
-    if (!name) return;
+    if (!newKeyName.trim()) return;
     try {
-      const res = await API.post("/apikeys", { name });
+      const res = await API.post("/apikeys", { name: newKeyName });
       setNewKeyData(res.data.data);
       toast.success("API Key generated!");
+      setShowCreateModal(false);
+      setNewKeyName("");
       refresh();
     } catch (e) {
       toast.error(e?.response?.data?.message || "Failed to generate API Key");
@@ -200,7 +203,7 @@ export default function Settings() {
                 <h2 className="text-lg font-bold text-slate-900">Developer API Keys</h2>
                 <p className="text-sm text-slate-500">Generate keys to connect third-party apps to your Minutes of Meeting account.</p>
               </div>
-              <button onClick={handleGenerateApiKey} className="btn-primary py-2 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+              <button onClick={() => setShowCreateModal(true)} className="btn-primary py-2 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
                 + Generate New Key
               </button>
             </div>
@@ -252,6 +255,44 @@ export default function Settings() {
           </section>
         </div>
       </div>
+
+      {/* CREATE API KEY MODAL */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-xl font-bold text-slate-900">Generate API Key</h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Enter a name to identify this API Key (e.g., 'HRMS System', 'Mobile App').
+            </p>
+            <input
+              type="text"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              placeholder="Enter key name..."
+              className="mb-6 w-full rounded-lg border border-slate-300 p-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewKeyName("");
+                }}
+                className="rounded-lg px-4 py-2 text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGenerateApiKey}
+                disabled={!newKeyName.trim()}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                Generate Key
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
