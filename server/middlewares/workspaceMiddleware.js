@@ -2,7 +2,10 @@ const Membership = require("../models/Membership");
 
 async function requireWorkspace(req, res, next) {
   try {
-    const workspaceId = req.headers["x-workspace-id"];
+    let workspaceId = req.headers["x-workspace-id"];
+    if (req.apiKeyWorkspace) {
+      workspaceId = req.apiKeyWorkspace.toString();
+    }
     const userId = req.user?._id;
     if (!userId) {
       res.status(401);

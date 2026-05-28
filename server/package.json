@@ -30,6 +30,7 @@
     "nodemailer": "^8.0.5",
     "puppeteer": "^24.42.0",
     "puppeteer-core": "^24.41.0",
+    "socket.io": "^4.8.3",
     "uuid": "^14.0.0",
     "y-mongodb": "^0.1.11",
     "yjs": "^13.6.30",
