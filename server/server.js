@@ -40,6 +40,7 @@ const actionItemRoutes = require("./routes/actionItemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const editorTemplateRoutes = require("./routes/editorTemplateRoutes");
 const apiKeyRoutes = require("./routes/apiKeyRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 // ✅ IMPORTANT: Visitor API Route
 // app.use("/api/visitors", visitorRoutes);
@@ -75,6 +76,7 @@ apiRouter.use(aiRoutes);
 apiRouter.use(editorTemplateRoutes);
 apiRouter.use(reportRoutes);
 apiRouter.use(apiKeyRoutes);
+apiRouter.use("/contacts", contactRoutes);
 
 // Add meeting routes (if explicitly prefixed)
 apiRouter.use("/meetings", meetingRoutes);

@@ -140,6 +140,7 @@ export default function Meetings() {
                 <option value="ongoing">Ongoing</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="rescheduled">Rescheduled</option>
               </select>
               <select
                 className="input-field"

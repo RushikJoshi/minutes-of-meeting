@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import { useAuth } from "../hooks/useAuth";
 
@@ -8,6 +9,7 @@ export default function AdminDashboard() {
   const [visitors, setVisitors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -15,6 +17,22 @@ export default function AdminDashboard() {
     async function load() {
       setLoading(true);
       setError("");
+
+      if (sessionStorage.getItem("justLoggedIn") === "true") {
+        sessionStorage.removeItem("justLoggedIn");
+        try {
+          const [msRes, goRes] = await Promise.all([
+            API.get("/integrations/microsoft/status").catch(() => ({ data: {} })),
+            API.get("/integrations/google/status").catch(() => ({ data: {} }))
+          ]);
+          if (!msRes.data?.connected && !goRes.data?.connected) {
+            navigate("/settings", { replace: true });
+            return;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
       try {
         const [meetingsRes, visitorsRes] = await Promise.all([
           API.get("/meetings").catch(() => ({ data: [] })),

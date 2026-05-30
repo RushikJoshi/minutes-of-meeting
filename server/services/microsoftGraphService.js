@@ -42,9 +42,9 @@ function createCcaWithCache(serializedCache) {
   return cca;
 }
 
-function signState({ userId, workspaceId }) {
+function signState({ userId, workspaceId, email }) {
   return jwt.sign(
-    { userId: String(userId), workspaceId: String(workspaceId || "") },
+    { userId: String(userId), workspaceId: String(workspaceId || ""), email: String(email || "") },
     process.env.JWT_SECRET,
     { expiresIn: "10m" }
   );
@@ -56,20 +56,20 @@ function verifyState(state) {
   return { userId: payload.userId, workspaceId: payload.workspaceId };
 }
 
-async function getConnectUrl({ userId, workspaceId }) {
+async function getConnectUrl({ userId, workspaceId, email }) {
   const cca = createCcaWithCache();
-  const state = signState({ userId, workspaceId });
+  const state = signState({ userId, workspaceId, email });
   const url = await cca.getAuthCodeUrl({
     scopes: SCOPES,
     redirectUri: process.env.MS_REDIRECT_URI,
     state,
-    prompt: "select_account",
+    prompt: "login",
   });
   return { url };
 }
 
 async function handleOAuthCallback({ code, state }) {
-  const { userId, workspaceId } = verifyState(state);
+  const { userId, workspaceId, email } = verifyState(state);
   const cca = createCcaWithCache();
   const token = await cca.acquireTokenByCode({
     code,
@@ -78,6 +78,7 @@ async function handleOAuthCallback({ code, state }) {
   });
   const cache = cca.getTokenCache().serialize();
   const account = token?.account;
+  const accountEmail = account?.username || "";
 
   await IntegrationToken.findOneAndUpdate(
     { provider: "microsoft", workspaceId, userId },

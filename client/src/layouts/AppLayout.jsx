@@ -145,6 +145,15 @@ export default function AppLayout() {
       )
     },
     {
+      to: "/people",
+      label: "People",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      )
+    },
+    {
       to: "/reports",
       label: "Reports",
       icon: (
@@ -187,7 +196,7 @@ export default function AppLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? "w-14" : "w-52"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        className={`fixed top-0 left-0 z-50 h-full border-r border-white/60 bg-white/90 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.7)] backdrop-blur-xl transition-all duration-300 ease-in-out ${sidebarCollapsed ? "w-14" : "w-64"} ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <div className="flex h-full flex-col min-h-0">
           {/* Sidebar Header */}
@@ -202,8 +211,8 @@ export default function AppLayout() {
                 />
               </div>
               {!sidebarCollapsed && (
-                <span className="font-bold text-xl bg-gradient-to-r from-[#00358E] to-blue-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200 ml-1">
-                  MOM System
+                <span className="font-bold text-lg bg-gradient-to-r from-[#00358E] to-blue-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200 ml-1 whitespace-nowrap">
+                  Minutes of Meetings
                 </span>
               )}
             </Link>
@@ -276,7 +285,7 @@ export default function AppLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-52'}`}>
+      <div className={`relative min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-64'}`}>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 border-b border-white/60 bg-white/70 backdrop-blur-xl">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-3">

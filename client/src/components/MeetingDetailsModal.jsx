@@ -32,7 +32,7 @@ export default function MeetingDetailsModal({ meeting, open, onClose, onEdit }) 
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Location</div>
                 <p className="mt-2 text-sm leading-7 text-slate-700">
-                  {meeting.type === "offline" ? meeting.location || "Location not set" : meeting.meetingLink || meeting.link || meeting.platform || "Online"}
+                  {meeting.type === "online" ? "Online" : (meeting.location || "Offline")}
                 </p>
               </div>
             </div>

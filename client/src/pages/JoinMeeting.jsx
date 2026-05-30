@@ -184,13 +184,13 @@ export default function JoinMeeting() {
               to="/login"
               className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-medium py-3 px-6 rounded-2xl transition-all text-sm border border-white/10"
             >
-              Login to MOM System
+              Login to Minutes of Meetings
             </Link>
           </div>
         </div>
 
         <p className="text-center text-white/30 text-xs mt-6 font-medium">
-          Powered by MOM System
+          Powered by Minutes of Meetings
         </p>
       </div>
     </div>

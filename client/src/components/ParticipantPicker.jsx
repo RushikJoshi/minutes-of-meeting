@@ -59,11 +59,15 @@ export default function ParticipantPicker({
 
     const t = setTimeout(async () => {
       try {
-        const res = await API.get("/users", {
-          params: { q, limit: 8 },
-          signal: controller.signal,
-        });
-        setSuggestions(Array.isArray(res.data) ? res.data : []);
+        const [usersRes, contactsRes] = await Promise.all([
+          API.get("/users", { params: { q, limit: 4 }, signal: controller.signal }).catch(() => ({ data: [] })),
+          API.get("/contacts", { params: { q, limit: 4 }, signal: controller.signal }).catch(() => ({ data: [] }))
+        ]);
+        
+        const users = Array.isArray(usersRes.data) ? usersRes.data.map(u => ({ ...u, _source: "user" })) : [];
+        const contacts = Array.isArray(contactsRes.data) ? contactsRes.data.map(c => ({ ...c, _source: "contact" })) : [];
+        
+        setSuggestions([...users, ...contacts]);
       } catch {
         setSuggestions([]);
       } finally {
@@ -90,11 +94,20 @@ export default function ParticipantPicker({
   };
 
   const addUser = (u) => {
-    if (!u?._id || !u?.email) return;
-    setParticipants([
-      ...participants,
-      { kind: "user", userId: u._id, email: u.email, name: u.name || "", role: "viewer" },
-    ]);
+    if (!u?._id && !u?.email) return;
+    
+    if (u._source === "user") {
+      setParticipants([
+        ...participants,
+        { kind: "user", userId: u._id, email: u.email, name: u.name || "", role: "viewer" },
+      ]);
+    } else {
+      setParticipants([
+        ...participants,
+        { kind: "external", email: u.email, name: u.name || "", role: "viewer" },
+      ]);
+    }
+    
     setQuery("");
     setSuggestions([]);
     setOpen(false);
@@ -106,7 +119,19 @@ export default function ParticipantPicker({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold mb-1">{label}</label>
+      <div className="flex items-center justify-between mb-1">
+        <label className="block text-sm font-semibold">{label}</label>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("open-people-drawer"))}
+          className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          Browse People
+        </button>
+      </div>
 
       <div className="border rounded p-2 bg-white">
         <div className="flex flex-wrap gap-2 mb-2">
@@ -157,9 +182,9 @@ export default function ParticipantPicker({
       </div>
 
       {open && (loading || suggestions.length) ? (
-        <div className="absolute z-10 mt-2 w-full rounded border bg-white shadow">
-          <div className="p-2 text-xs text-gray-500">
-            {loading ? "Searching…" : "Select a user"}
+        <div className="absolute z-10 mt-2 w-full rounded border bg-white shadow-lg overflow-hidden">
+          <div className="p-2 text-xs text-gray-500 bg-gray-50 border-b">
+            {loading ? "Searching…" : "Select a contact or user"}
           </div>
           {suggestions.map((u) => (
             <button
@@ -168,7 +193,12 @@ export default function ParticipantPicker({
               className="w-full text-left px-3 py-2 hover:bg-gray-50"
               onClick={() => addUser(u)}
             >
-              <div className="text-sm font-medium">{u.name || u.email}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-slate-900">{u.name || u.email}</div>
+                {u._source === "contact" && (
+                  <span className="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded uppercase tracking-wide">Contact</span>
+                )}
+              </div>
               <div className="text-xs text-gray-500">{u.email}</div>
             </button>
           ))}

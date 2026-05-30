@@ -3,12 +3,14 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 import MeetingForm from "../components/MeetingForm";
+import { useAuth } from "../hooks/useAuth";
 
 const MEETINGS_QUERY_KEY = ["meetings"];
 
 export default function CreateMeeting() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const createMeeting = useMutation({
     mutationFn: async (payload) => (await API.post("/create-meeting", payload)).data,
@@ -38,6 +40,21 @@ export default function CreateMeeting() {
         <div className="flex-1 overflow-auto pb-10">
           <div className="w-full">
             <MeetingForm
+              meeting={
+                user
+                  ? {
+                      participants: [
+                        {
+                          kind: "user",
+                          userId: user._id,
+                          email: user.email,
+                          name: user.name || "",
+                          role: "viewer",
+                        },
+                      ],
+                    }
+                  : null
+              }
               isSubmitting={createMeeting.isPending}
               showHeader={false}
               chrome="plain"

@@ -3,6 +3,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import API from "../api/api";
 import IntegrationCard from "../components/IntegrationCard";
+import { useWorkspace } from "../hooks/useWorkspace";
 
 export default function Settings() {
   const [ms, setMs] = useState({ connected: false });
@@ -15,6 +16,10 @@ export default function Settings() {
   const [error, setError] = useState("");
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const { workspaces, activeWorkspaceId } = useWorkspace();
+  const activeWs = workspaces.find((w) => w?.workspace?._id === activeWorkspaceId);
+  const isAdmin = activeWs?.role === "admin" || activeWs?.role === "owner";
 
   const refresh = async () => {
     setLoading(true);
@@ -197,11 +202,12 @@ export default function Settings() {
           </section>
 
           {/* MASTER API SECTION */}
-          <section className="mt-12 border-t border-slate-200 pt-8">
+          {isAdmin && (
+            <section className="mt-12 border-t border-slate-200 pt-8">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Developer API Keys</h2>
-                <p className="text-sm text-slate-500">Generate keys to connect third-party apps to your Minutes of Meeting account.</p>
+                <p className="text-sm text-slate-500">Generate keys to connect third-party apps, HRMS, and CRM systems to sync People/Contacts and manage meetings programmatically.</p>
               </div>
               <button onClick={() => setShowCreateModal(true)} className="btn-primary py-2 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
                 + Generate New Key
@@ -253,6 +259,7 @@ export default function Settings() {
               </table>
             </div>
           </section>
+          )}
         </div>
       </div>
 

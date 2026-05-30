@@ -31,7 +31,7 @@ function getAuthUrl(state) {
 /**
  * Exchange code for tokens and save to DB
  */
-async function handleOAuthCallback({ code, userId, workspaceId }) {
+async function handleOAuthCallback({ code, userId, workspaceId, expectedEmail }) {
   const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   

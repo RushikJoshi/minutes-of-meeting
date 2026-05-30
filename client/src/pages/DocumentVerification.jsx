@@ -11,16 +11,23 @@ export default function DocumentVerification() {
     documentNumber: "",
     mobile: "",
   });
-  const [image, setImage] = useState(null);
+  const [frontImage, setFrontImage] = useState(null);
+  const [backImage, setBackImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleImageChange = (e) => {
+  const handleFrontImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+      setFrontImage(e.target.files[0]);
+    }
+  };
+
+  const handleBackImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setBackImage(e.target.files[0]);
     }
   };
 
@@ -123,14 +130,33 @@ export default function DocumentVerification() {
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Upload Image (Optional)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                {formData.documentType === "AADHAR" && "Aadhar Front Image (Optional)"}
+                {formData.documentType === "PAN" && "Pancard Front Image (Optional)"}
+                {formData.documentType === "DL" && "Driving License Front Image (Optional)"}
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFrontImageChange}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                {formData.documentType === "AADHAR" && "Aadhar Back Image (Optional)"}
+                {formData.documentType === "PAN" && "Pancard Back Image (Optional)"}
+                {formData.documentType === "DL" && "Driving License Back Image (Optional)"}
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleBackImageChange}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
+              />
+            </div>
           </div>
 
           <button

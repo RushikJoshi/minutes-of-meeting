@@ -20,7 +20,7 @@ const googleStatus = asyncHandler(async (req, res) => {
 
 const googleConnect = asyncHandler(async (req, res) => {
   const state = jwt.sign(
-    { userId: String(req.user._id), workspaceId: String(req.workspace._id) },
+    { userId: String(req.user._id), workspaceId: String(req.workspace._id), email: String(req.user.email || "") },
     process.env.JWT_SECRET,
     { expiresIn: "10m" }
   );
@@ -40,6 +40,7 @@ const googleCallback = asyncHandler(async (req, res) => {
     code,
     userId: decoded.userId,
     workspaceId: decoded.workspaceId,
+    expectedEmail: decoded.email,
   });
 
   const clientBase = process.env.PUBLIC_CLIENT_BASE_URL || "http://localhost:5173";
