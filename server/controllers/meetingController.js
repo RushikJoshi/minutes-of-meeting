@@ -190,7 +190,7 @@ function getInviteCcList(req) {
   return Array.from(new Set([...organizer, ...configured]));
 }
 
-async function sendInvitations({ meeting, participants, cc = [] }) {
+async function sendInvitations({ meeting, participants, cc = [], sender }) {
   if (!Array.isArray(participants) || participants.length === 0) {
     return { sent: 0, failed: [] };
   }
@@ -200,7 +200,7 @@ async function sendInvitations({ meeting, participants, cc = [] }) {
     joinLink: getParticipantJoinUrl(meeting._id, participant),
   }));
 
-  const result = await emailService.sendMeetingInvitation({ meeting, recipients, cc });
+  const result = await emailService.sendMeetingInvitation({ meeting, recipients, cc, sender });
   const sentEmails = new Set(
     recipients
       .map((recipient) => recipient.email)
@@ -576,6 +576,7 @@ const createMeeting = asyncHandler(async (req, res) => {
         meeting,
         recipients: [{ email: req.user.email, hostLink: meetingHostLink }],
         cc: getInviteCcList(req),
+        sender: req.user,
       });
     } catch (err) {
       console.warn("Host invite email failed:", err?.message || err);
@@ -592,7 +593,10 @@ const createMeeting = asyncHandler(async (req, res) => {
       meeting,
       participants: invitedParticipants,
       cc: getInviteCcList(req),
-    }).catch(err => console.error("[Invitations] Background send failed:", err.message));
+      sender: req.user,
+    }).catch((err) => {
+      console.error("Background invitation failed:", err);
+    });
   }
 
   res.status(201).json({
@@ -683,6 +687,7 @@ const updateMeeting = asyncHandler(async (req, res) => {
         meeting,
         participants: newParticipants,
         cc: getInviteCcList(req),
+        sender: req.user,
       });
     }
   }
@@ -792,6 +797,7 @@ const inviteParticipants = asyncHandler(async (req, res) => {
     meeting,
     participants: participantsToInvite,
     cc: getInviteCcList(req),
+    sender: req.user,
   });
 
   res.json({

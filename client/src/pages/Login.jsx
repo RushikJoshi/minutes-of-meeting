@@ -27,6 +27,7 @@ export default function Login() {
     setError("");
     try {
       await login(email, password);
+      sessionStorage.setItem("justLoggedIn", "true");
       navigate("/role-selection", { replace: true });
     } catch (err) {
       const msg = err?.response?.data?.message || "Login failed. Please check credentials.";

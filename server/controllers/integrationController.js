@@ -21,7 +21,7 @@ const microsoftStatus = asyncHandler(async (req, res) => {
 });
 
 const microsoftConnect = asyncHandler(async (req, res) => {
-  const { url } = await getConnectUrl({ userId: req.user._id, workspaceId: req.workspace._id });
+  const { url } = await getConnectUrl({ userId: req.user._id, workspaceId: req.workspace._id, email: req.user.email });
   res.json({ url });
 });
 

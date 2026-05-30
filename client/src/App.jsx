@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import ActionItems from "./pages/ActionItems";
 import MinutesEditor from "./pages/MinutesEditor";
 import TemplateBuilder from "./pages/TemplateBuilder";
+import People from "./pages/People";
 import JoinMeeting from "./pages/JoinMeeting";
 // import VisitorPage from "./pages/VisitorPage";
 import RoleSelection from "./pages/RoleSelection";
@@ -157,6 +158,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/documents" element={<Documents />} />
+            <Route path="/people" element={<People />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/action-items" element={<ActionItems />} />
             <Route path="/template-builder" element={<TemplateBuilder />} />

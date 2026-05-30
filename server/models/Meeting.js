@@ -39,6 +39,7 @@ const meetingSchema = new mongoose.Schema(
       index: true,
     },
     title: { type: String, required: true, trim: true },
+    purpose: { type: String, default: "" },
     agenda: { type: String, default: "" },
     description: { type: String, default: "" }, // Added
     date: { type: Date },
@@ -73,7 +74,7 @@ const meetingSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["scheduled", "ongoing", "completed", "cancelled"], // Changed live to ongoing
+      enum: ["scheduled", "ongoing", "completed", "cancelled", "rescheduled"], // Changed live to ongoing
       default: "scheduled",
       index: true,
     },

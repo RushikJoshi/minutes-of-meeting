@@ -87,7 +87,7 @@ class EmailService {
     }
   }
 
-  async sendMeetingInvitation({ meeting, recipients, cc = [] }) {
+  async sendMeetingInvitation({ meeting, recipients, cc = [], sender }) {
     if (!this.isConfigured()) return { sent: 0, failed: recipients?.map((r) => ({ email: r.email, error: "Email not configured" })) || [] };
     const transporter = this.getTransporter();
     if (!transporter) {
@@ -203,8 +203,11 @@ class EmailService {
       ].filter(Boolean);
 
       try {
+        const fromEmail = sender?.email || this.getEnv("EMAIL_USER", "SMTP_USER");
+        const fromName = sender?.name ? `"${sender.name}"` : `"GT MOM"`;
+
         await transporter.sendMail({
-          from: `"GT MOM" <${this.getEnv("EMAIL_USER", "SMTP_USER")}>`,
+          from: `${fromName} <${fromEmail}>`,
           to,
           cc: safeCc.length ? safeCc : undefined,
           subject,

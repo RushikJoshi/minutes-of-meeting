@@ -153,6 +153,15 @@ export default function MeetingDetails() {
             <button type="button" className="btn-secondary" onClick={() => setShowEditModal(true)}>
               Edit meeting
             </button>
+            {(meeting.status === "completed" || meeting.status === "cancelled") && (
+              <button
+                type="button"
+                className="btn-primary !bg-purple-600 hover:!bg-purple-700"
+                onClick={() => setShowEditModal(true)}
+              >
+                Reschedule meeting
+              </button>
+            )}
             {meeting.status === "ongoing" && (
               <button
                 type="button"
@@ -178,7 +187,7 @@ export default function MeetingDetails() {
                 <InfoTile label="Reminder" value={`${meeting.reminderMinutes || 0} minutes before`} />
                 <InfoTile
                   label="Mode"
-                  value={meeting.type === "offline" ? meeting.location || "Offline" : meeting.meetingLink || meeting.link || meeting.platform}
+                  value={meeting.type === "online" ? "Online" : (meeting.location || "Offline")}
                 />
               </div>
             </div>
