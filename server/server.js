@@ -84,6 +84,13 @@ apiRouter.use("/meetings", meetingRoutes);
 // Mount the v1 API
 app.use("/api/v1", apiRouter);
 
+// OAuth redirect URIs are configured without /api/v1.
+// Keep these callback aliases so provider settings continue to work.
+const { microsoftCallback } = require("./controllers/integrationController");
+const { googleCallback } = require("./controllers/googleController");
+app.get("/integrations/microsoft/callback", microsoftCallback);
+app.get("/integrations/google/callback", googleCallback);
+
 /* ===========================
    Static Uploads
 =========================== */

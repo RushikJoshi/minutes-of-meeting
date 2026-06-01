@@ -3,6 +3,8 @@ const IntegrationToken = require("../models/IntegrationToken");
 const {
   getConnectUrl,
   handleOAuthCallback,
+  SCOPES,
+  getMicrosoftRuntimeValues,
 } = require("../services/microsoftGraphService");
 
 const microsoftStatus = asyncHandler(async (req, res) => {
@@ -28,6 +30,28 @@ const microsoftConnect = asyncHandler(async (req, res) => {
 const microsoftCallback = asyncHandler(async (req, res) => {
   const code = String(req.query.code || "");
   const state = String(req.query.state || "");
+  console.log("[Microsoft OAuth] Callback request", {
+    method: req.method,
+    originalUrl: req.originalUrl,
+    path: req.path,
+    query: req.query,
+    runtime: getMicrosoftRuntimeValues(),
+  });
+  console.log("CODE:", code);
+  console.log("STATE:", state);
+  console.log("REDIRECT:", getMicrosoftRuntimeValues().redirectUri);
+  console.log("SCOPES:", SCOPES);
+
+  if (req.query.error || req.query.error_description) {
+    console.error("[Microsoft OAuth] Callback returned an OAuth error", {
+      error: req.query.error,
+      errorDescription: req.query.error_description,
+      errorUri: req.query.error_uri,
+      correlationId: req.query.correlation_id,
+      traceId: req.query.trace_id,
+    });
+  }
+
   if (!code || !state) {
     res.status(400);
     throw new Error("Missing code/state");
