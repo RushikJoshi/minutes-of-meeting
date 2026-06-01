@@ -5,6 +5,7 @@ const Workspace = require("../models/Workspace");
 const Membership = require("../models/Membership");
 
 async function register({ email, password, name }) {
+  email = String(email).trim().toLowerCase();
   const existing = await User.findOne({ email });
   if (existing) {
     const err = new Error("Email already in use");
@@ -31,6 +32,7 @@ async function register({ email, password, name }) {
 }
 
 async function login({ email, password }) {
+  email = String(email).trim().toLowerCase();
   const user = await User.findOne({ email });
   if (!user) {
     const err = new Error("Invalid credentials");

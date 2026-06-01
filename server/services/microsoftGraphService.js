@@ -2,13 +2,50 @@ const jwt = require("jsonwebtoken");
 const { ConfidentialClientApplication } = require("@azure/msal-node");
 const IntegrationToken = require("../models/IntegrationToken");
 
-const SCOPES = ["offline_access", "User.Read", "Calendars.ReadWrite"];
+const SCOPES = ["openid", "profile", "email", "offline_access", "User.Read", "Calendars.ReadWrite"];
 
-function msalConfig() {
-  const clientId = process.env.MS_CLIENT_ID?.trim();
-  const clientSecret = process.env.MS_CLIENT_SECRET?.trim();
+function getMicrosoftRuntimeValues() {
   const tenantId = process.env.MS_TENANT_ID?.trim() || "common";
   const redirectUri = process.env.MS_REDIRECT_URI?.trim();
+  const clientId = process.env.MS_CLIENT_ID?.trim();
+  const authority = `https://login.microsoftonline.com/${tenantId}`;
+
+  return {
+    clientId,
+    clientSecretConfigured: Boolean(process.env.MS_CLIENT_SECRET?.trim()),
+    tenantId,
+    authority,
+    redirectUri,
+    scopes: SCOPES,
+  };
+}
+
+function logMicrosoftOAuth(label, details = {}) {
+  console.log(`[Microsoft OAuth] ${label}`, {
+    ...getMicrosoftRuntimeValues(),
+    ...details,
+  });
+}
+
+function serializeMsalError(error) {
+  return {
+    name: error?.name,
+    message: error?.message,
+    errorCode: error?.errorCode,
+    subError: error?.subError,
+    correlationId: error?.correlationId,
+    statusCode: error?.statusCode,
+    claims: error?.claims,
+    stack: error?.stack,
+    raw: error,
+  };
+}
+
+function msalConfig() {
+  const runtime = getMicrosoftRuntimeValues();
+  const clientId = runtime.clientId;
+  const clientSecret = process.env.MS_CLIENT_SECRET?.trim();
+  const redirectUri = runtime.redirectUri;
   const missing = [];
   if (!clientId) missing.push("MS_CLIENT_ID");
   if (!clientSecret) missing.push("MS_CLIENT_SECRET");
@@ -24,7 +61,7 @@ function msalConfig() {
   return {
     auth: {
       clientId,
-      authority: `https://login.microsoftonline.com/${tenantId}`,
+      authority: runtime.authority,
       clientSecret,
     },
   };
@@ -59,26 +96,63 @@ function verifyState(state) {
 async function getConnectUrl({ userId, workspaceId, email }) {
   const cca = createCcaWithCache();
   const state = signState({ userId, workspaceId, email });
+  const runtime = getMicrosoftRuntimeValues();
+  logMicrosoftOAuth("Generating authorization URL", {
+    userId: String(userId),
+    workspaceId: String(workspaceId),
+    email,
+    stateLength: state.length,
+  });
   const url = await cca.getAuthCodeUrl({
     scopes: SCOPES,
-    redirectUri: process.env.MS_REDIRECT_URI,
+    redirectUri: runtime.redirectUri,
     state,
     prompt: "login",
+  });
+  logMicrosoftOAuth("Generated authorization URL", {
+    authorizationUrl: url,
   });
   return { url };
 }
 
 async function handleOAuthCallback({ code, state }) {
-  const { userId, workspaceId, email } = verifyState(state);
-  const cca = createCcaWithCache();
-  const token = await cca.acquireTokenByCode({
-    code,
-    scopes: SCOPES,
-    redirectUri: process.env.MS_REDIRECT_URI,
+  logMicrosoftOAuth("Callback received in service", {
+    codeReceived: Boolean(code),
+    codeLength: code ? String(code).length : 0,
+    stateReceived: Boolean(state),
+    stateLength: state ? String(state).length : 0,
   });
+  const { userId, workspaceId } = verifyState(state);
+  const cca = createCcaWithCache();
+  const runtime = getMicrosoftRuntimeValues();
+  let token;
+  try {
+    token = await cca.acquireTokenByCode({
+      code,
+      scopes: SCOPES,
+      redirectUri: runtime.redirectUri,
+    });
+    logMicrosoftOAuth("Token exchange succeeded", {
+      userId,
+      workspaceId,
+      accountUsername: token?.account?.username || "",
+      accountTenantId: token?.account?.tenantId || "",
+      homeAccountId: token?.account?.homeAccountId || "",
+      expiresOn: token?.expiresOn,
+      scopes: token?.scopes,
+      hasAccessToken: Boolean(token?.accessToken),
+      hasIdToken: Boolean(token?.idToken),
+    });
+  } catch (error) {
+    logMicrosoftOAuth("Token exchange failed", {
+      codeReceived: Boolean(code),
+      codeLength: code ? String(code).length : 0,
+      error: serializeMsalError(error),
+    });
+    throw error;
+  }
   const cache = cca.getTokenCache().serialize();
   const account = token?.account;
-  const accountEmail = account?.username || "";
 
   await IntegrationToken.findOneAndUpdate(
     { provider: "microsoft", workspaceId, userId },
@@ -229,4 +303,6 @@ module.exports = {
   createOutlookEvent,
   updateOutlookEvent,
   deleteOutlookEvent,
+  SCOPES,
+  getMicrosoftRuntimeValues,
 };
