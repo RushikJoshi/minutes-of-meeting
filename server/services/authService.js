@@ -1,8 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const { signAccessToken } = require("./tokenService");
-const Workspace = require("../models/Workspace");
-const Membership = require("../models/Membership");
 
 async function register({ email, password, name }) {
   email = String(email).trim().toLowerCase();
@@ -20,13 +18,6 @@ async function register({ email, password, name }) {
     passwordHash,
   });
 
-  // Create a default workspace for first-time users
-  const ws = await Workspace.create({
-    name: user.name ? `${user.name}'s Workspace` : "My Workspace",
-    createdBy: user._id,
-  });
-  await Membership.create({ workspaceId: ws._id, userId: user._id, role: "owner" });
-
   const token = signAccessToken(user._id);
   return { user: sanitizeUser(user), token };
 }
@@ -40,22 +31,18 @@ async function login({ email, password }) {
     throw err;
   }
 
+  // Allow login if user has a password. (Invitees without password should not login here yet)
+  if (!user.passwordHash) {
+    const err = new Error("Account setup incomplete. Please use the invite link.");
+    err.statusCode = 401;
+    throw err;
+  }
+
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
     const err = new Error("Invalid credentials");
     err.statusCode = 401;
     throw err;
-  }
-
-  // Backfill default workspace/membership for legacy users that were created
-  // without a workspace (pre multi-workspace support).
-  const existingMembership = await Membership.findOne({ userId: user._id });
-  if (!existingMembership) {
-    const ws = await Workspace.create({
-      name: user.name ? `${user.name}'s Workspace` : "My Workspace",
-      createdBy: user._id,
-    });
-    await Membership.create({ workspaceId: ws._id, userId: user._id, role: "owner" });
   }
 
   const token = signAccessToken(user._id);
@@ -67,10 +54,26 @@ function sanitizeUser(userDoc) {
     _id: userDoc._id,
     email: userDoc.email,
     name: userDoc.name || "",
+    role: userDoc.role,
+    organizationId: userDoc.organizationId,
     createdAt: userDoc.createdAt,
     updatedAt: userDoc.updatedAt,
   };
 }
 
-module.exports = { register, login, sanitizeUser };
+async function acceptInvite({ token, password }) {
+  if (!token) throw new Error("Invite token missing");
+  const user = await User.findOne({ inviteToken: token, inviteTokenExpiresAt: { $gt: new Date() } });
+  if (!user) {
+    const err = new Error("Invalid or expired invite token");
+    err.statusCode = 400;
+    throw err;
+  }
+  user.passwordHash = await bcrypt.hash(password, 12);
+  user.inviteToken = undefined;
+  user.inviteTokenExpiresAt = undefined;
+  await user.save();
+  return sanitizeUser(user);
+}
 
+module.exports = { register, login, acceptInvite, sanitizeUser };

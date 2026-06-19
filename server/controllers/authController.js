@@ -15,5 +15,10 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
-module.exports = { register, login, me };
+const acceptInvite = asyncHandler(async (req, res) => {
+  const user = await authService.acceptInvite(req.body);
+  res.json({ message: "Invite accepted successfully", user });
+});
+
+module.exports = { register, login, me, acceptInvite };
 

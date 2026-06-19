@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const actionItemSchema = new mongoose.Schema(
   {
-    workspaceId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -25,6 +25,6 @@ const actionItemSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-actionItemSchema.index({ workspaceId: 1, status: 1, deadline: 1 });
+actionItemSchema.index({ organizationId: 1, status: 1, deadline: 1 });
 
 module.exports = mongoose.model("ActionItem", actionItemSchema);

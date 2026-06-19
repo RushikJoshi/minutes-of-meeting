@@ -52,7 +52,7 @@ const uploadAttachment = [
     const urlPath = `/uploads/${req.file.filename}`;
 
     const attachment = await Attachment.create({
-      workspaceId: req.workspace._id,
+      organizationId: req.organization._id,
       entityType,
       entityId,
       originalName: req.file.originalname || "",
@@ -77,7 +77,7 @@ const listAttachments = asyncHandler(async (req, res) => {
     entityType,
     entityId,
     createdBy: req.user._id,
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
   }).sort({
     createdAt: -1,
   });

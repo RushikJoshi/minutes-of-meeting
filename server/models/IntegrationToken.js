@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const integrationTokenSchema = new mongoose.Schema(
   {
     provider: { type: String, enum: ["microsoft", "google", "zoom"], required: true, index: true },
-    workspaceId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -29,6 +29,6 @@ const integrationTokenSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-integrationTokenSchema.index({ provider: 1, workspaceId: 1, userId: 1 }, { unique: true });
+integrationTokenSchema.index({ provider: 1, organizationId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model("IntegrationToken", integrationTokenSchema);

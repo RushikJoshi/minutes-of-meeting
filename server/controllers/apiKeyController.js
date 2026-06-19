@@ -3,18 +3,18 @@ const ApiKey = require("../models/ApiKey");
 const Membership = require("../models/Membership");
 
 /**
- * Generate a new API Key for the user or workspace
+ * Generate a new API Key for the user or organization
  */
 exports.createApiKey = async (req, res) => {
   try {
-    const { name, workspaceId } = req.body;
+    const { name, organizationId } = req.body;
     if (!name) return res.status(400).json({ success: false, message: "Name is required" });
 
-    // Validate workspace if provided
-    if (workspaceId) {
-      const membership = await Membership.findOne({ userId: req.user._id, workspaceId });
+    // Validate organization if provided
+    if (organizationId) {
+      const membership = await Membership.findOne({ userId: req.user._id, organizationId });
       if (!membership) {
-        return res.status(403).json({ success: false, message: "Not a member of this workspace" });
+        return res.status(403).json({ success: false, message: "Not a member of this organization" });
       }
     }
 
@@ -29,7 +29,7 @@ exports.createApiKey = async (req, res) => {
       name,
       keyHash,
       user: req.user._id,
-      workspace: workspaceId || null
+      organization: organizationId || null
     });
 
     res.status(201).json({

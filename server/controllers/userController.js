@@ -22,5 +22,18 @@ const listUsers = asyncHandler(async (req, res) => {
   res.json(users);
 });
 
-module.exports = { listUsers };
+const updateProfile = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (name !== undefined) user.name = name;
+  await user.save();
+
+  res.json({ message: "Profile updated successfully", user: { _id: user._id, name: user.name, email: user.email, role: user.role } });
+});
+
+module.exports = { listUsers, updateProfile };
 

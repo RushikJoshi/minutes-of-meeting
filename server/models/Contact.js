@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const contactSchema = new mongoose.Schema(
   {
-    workspace: {
+    organization: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -62,7 +62,7 @@ const contactSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Ensure email is unique within a workspace
-contactSchema.index({ workspace: 1, email: 1 }, { unique: true });
+// Ensure email is unique within a organization
+contactSchema.index({ organization: 1, email: 1 }, { unique: true });
 
 module.exports = mongoose.model("Contact", contactSchema);

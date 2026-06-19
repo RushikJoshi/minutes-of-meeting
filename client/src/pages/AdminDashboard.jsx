@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../api/api";
 import { useAuth } from "../hooks/useAuth";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [meetings, setMeetings] = useState([]);
-  const [visitors, setVisitors] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -18,33 +17,13 @@ export default function AdminDashboard() {
       setLoading(true);
       setError("");
 
-      if (sessionStorage.getItem("justLoggedIn") === "true") {
-        sessionStorage.removeItem("justLoggedIn");
-        try {
-          const [msRes, goRes] = await Promise.all([
-            API.get("/integrations/microsoft/status").catch(() => ({ data: {} })),
-            API.get("/integrations/google/status").catch(() => ({ data: {} }))
-          ]);
-          if (!msRes.data?.connected && !goRes.data?.connected) {
-            navigate("/settings", { replace: true });
-            return;
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
       try {
-        const [meetingsRes, visitorsRes] = await Promise.all([
-          API.get("/meetings").catch(() => ({ data: [] })),
-          API.get("/api/visitors").catch(() => ({ data: [] }))
-        ]);
-
+        const res = await API.get("/dashboard");
         if (!cancelled) {
-          setMeetings(meetingsRes.data || []);
-          setVisitors(visitorsRes.data || []);
+          setStats(res.data);
         }
       } catch (err) {
-        if (!cancelled) setError("Failed to load admin dashboard data.");
+        if (!cancelled) setError("Failed to load dashboard data.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -56,124 +35,163 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const stats = useMemo(() => {
-    const totalMeetings = meetings.length;
-    const completedMeetings = meetings.filter((m) => m.status === "completed").length;
-    const totalVisitors = visitors.length;
-    const verifiedVisitors = visitors.filter((v) => v.document?.status === "VERIFIED" || v.status === "VERIFIED").length;
-    return { totalMeetings, completedMeetings, totalVisitors, verifiedVisitors };
-  }, [meetings, visitors]);
+  if (loading) {
+    return (
+      <div className="page-shell">
+        <div className="page-card p-5">
+          <p className="text-slate-600">Loading system data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-shell">
+        <div className="page-card border-red-200 p-5">
+          <p className="text-red-800">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell">
       <div className="w-full fade-up">
-        <div className="mb-6 sm:mb-8 flex items-center justify-between">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="section-title">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Organization Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">Overview of your company's data and pending items.</p>
           </div>
-          <div className="hidden sm:block">
+          <div className="mt-4 sm:mt-0">
             <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-700">
               Admin Access
             </span>
           </div>
         </div>
 
-        {loading ? (
-          <div className="page-card p-5">
-            <p className="text-slate-600">Loading system data...</p>
+        {/* Top Stat Cards */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5 mb-8">
+          <div className="bg-white p-5 rounded-lg shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div className="text-3xl mb-2">👥</div>
+            <div className="text-sm font-semibold text-gray-500 uppercase">Total Users</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{stats.totalUsers}</div>
           </div>
-        ) : error ? (
-          <div className="page-card border-red-200 p-5">
-            <p className="text-red-800">{error}</p>
+          <div className="bg-white p-5 rounded-lg shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div className="text-3xl mb-2">📅</div>
+            <div className="text-sm font-semibold text-gray-500 uppercase">Total Meetings</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{stats.totalMeetings}</div>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-              <div className="page-card page-card-hover p-5 border-l-4 border-l-blue-500">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Total Meetings</div>
-                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.totalMeetings}</div>
+          <div className="bg-white p-5 rounded-lg shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div className="text-3xl mb-2">📄</div>
+            <div className="text-sm font-semibold text-gray-500 uppercase">Total Documents</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{stats.totalDocuments}</div>
+          </div>
+          <div className="bg-white p-5 rounded-lg shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div className="text-3xl mb-2">📝</div>
+            <div className="text-sm font-semibold text-gray-500 uppercase">Total MOM</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{stats.totalMOM}</div>
+          </div>
+          <div className="bg-white p-5 rounded-lg shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div className="text-3xl mb-2">✅</div>
+            <div className="text-sm font-semibold text-gray-500 uppercase">Completed Tasks</div>
+            <div className="mt-1 text-2xl font-bold text-gray-900">{stats.completedTasks}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Today & Upcoming Meetings */}
+          <div className="space-y-6">
+            <div className="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <span>📅</span> Today's Meetings
+                </h2>
+                <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {stats.todaysMeetingsCount}
+                </span>
               </div>
-              <div className="page-card page-card-hover p-5 border-l-4 border-l-emerald-500">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Completed</div>
-                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.completedMeetings}</div>
-              </div>
-              <div className="page-card page-card-hover p-5 border-l-4 border-l-purple-500">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Total Visitors</div>
-                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.totalVisitors}</div>
-              </div>
-              <div className="page-card page-card-hover p-5 border-l-4 border-l-indigo-500">
-                <div className="text-sm font-semibold text-slate-500 uppercase">Verified Visitors</div>
-                <div className="mt-2 text-3xl font-bold text-slate-800">{stats.verifiedVisitors}</div>
-              </div>
+              <p className="text-sm text-gray-500">You have {stats.todaysMeetingsCount} meetings scheduled for today.</p>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* Recent Meetings */}
-              <div className="page-card p-5 sm:p-6">
-                <h2 className="text-lg font-bold text-slate-800">System Meetings</h2>
-                {meetings.length ? (
-                  <div className="mt-4 space-y-3">
-                    {meetings.slice(0, 5).map((m) => (
-                      <div
-                        key={m._id}
-                        className="flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 transition-all duration-200 hover:border-blue-200 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div>
-                          <div className="font-semibold text-slate-900">{m.title}</div>
-                          <div className="text-sm text-slate-500">
-                            {m.date ? new Date(m.date).toDateString() : "-"}
-                          </div>
-                        </div>
-                        <span
-                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${m.status === "completed"
-                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                            : "bg-amber-50 border-amber-200 text-amber-700"
-                            }`}
-                        >
-                          {m.status || "scheduled"}
-                        </span>
+            <div className="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>⏳</span> Upcoming Meetings
+              </h2>
+              {stats.upcomingMeetings && stats.upcomingMeetings.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.upcomingMeetings.map((m) => (
+                    <div key={m._id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded border border-gray-100">
+                      <div>
+                        <div className="font-medium text-gray-900">{m.title}</div>
+                        <div className="text-xs text-gray-500">{new Date(m.startTime).toLocaleString()}</div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-slate-500">No meetings found.</p>
-                )}
-              </div>
-
-              {/* Recent Visitors */}
-              <div className="page-card p-5 sm:p-6">
-                <h2 className="text-lg font-bold text-slate-800">Recent Visitors</h2>
-                {visitors.length ? (
-                  <div className="mt-4 space-y-3">
-                    {visitors.slice(0, 5).map((v) => (
-                      <div
-                        key={v._id}
-                        className="flex flex-col gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 transition-all duration-200 hover:border-purple-200 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div>
-                          <div className="font-semibold text-slate-900">{v.name}</div>
-                          <div className="text-sm text-slate-500">
-                            {v.company || "No Company"} • {v.mobile || "No Mobile"}
-                          </div>
-                        </div>
-                        <span
-                          className={`text-xs px-2.5 py-1 rounded-md border font-semibold ${v.document?.status === "VERIFIED" || v.status === "VERIFIED"
-                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                            : "bg-blue-50 border-blue-200 text-blue-700"
-                            }`}
-                        >
-                          {v.document?.status === "VERIFIED" ? "Verified" : v.status || "WAITING"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-slate-500">No visitors found.</p>
-                )}
-              </div>
+                      <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded border border-blue-100 uppercase tracking-wide">
+                        {m.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No upcoming meetings scheduled.</p>
+              )}
             </div>
-          </>
-        )}
+          </div>
+
+          {/* Pending Tasks & Recent Docs */}
+          <div className="space-y-6">
+            <div className="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <span>⚠️</span> Pending Tasks
+                </h2>
+                <span className="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {stats.pendingTasksCount}
+                </span>
+              </div>
+              {stats.pendingTasks && stats.pendingTasks.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.pendingTasks.map((t) => (
+                    <div key={t._id} className="flex justify-between items-center p-3 hover:bg-red-50 rounded border border-red-100">
+                      <div>
+                        <div className="font-medium text-gray-900">{t.task}</div>
+                        <div className="text-xs text-red-500">Due: {t.deadline ? new Date(t.deadline).toLocaleDateString() : 'No date'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No pending tasks.</p>
+              )}
+            </div>
+
+            <div className="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>📄</span> Recent Documents
+              </h2>
+              {stats.recentDocuments && stats.recentDocuments.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.recentDocuments.map((doc) => (
+                    <div key={doc._id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded border border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">📄</span>
+                        <div>
+                          <div className="font-medium text-gray-900 truncate max-w-[200px]">{doc.name}</div>
+                          <div className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                        View
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No recent documents uploaded.</p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

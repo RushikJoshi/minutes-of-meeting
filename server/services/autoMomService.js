@@ -80,8 +80,8 @@ function buildAttendance(meeting) {
 /**
  * Generates structured MOM report and saves to Mom DB
  */
-async function generateMOMReport(meetingId, workspaceId, userId) {
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId }).populate("createdBy");
+async function generateMOMReport(meetingId, organizationId, userId) {
+  const meeting = await Meeting.findOne({ _id: meetingId, organizationId }).populate("createdBy");
   if (!meeting) throw new Error("Meeting not found");
 
   const attendance = buildAttendance(meeting);
@@ -98,7 +98,7 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
   }
 
   // Map existing action items if any
-  const existingActionItems = await ActionItem.find({ meetingId, workspaceId });
+  const existingActionItems = await ActionItem.find({ meetingId, organizationId });
   const actionItemsMapped = existingActionItems.map(item => ({
     srNo: item._id.toString(),
     task: item.task,
@@ -110,7 +110,7 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
 
   // Fetch Editor Template
   let contentHtml = "";
-  const template = await EditorTemplate.findOne({ workspaceId });
+  const template = await EditorTemplate.findOne({ organizationId });
   
   if (template && template.contentHtml && template.contentHtml.length > 10) {
     contentHtml = template.contentHtml;
@@ -165,7 +165,7 @@ async function generateMOMReport(meetingId, workspaceId, userId) {
 
   // Create the Mom document with structured data
   const mom = await Mom.findOneAndUpdate(
-    { meetingId, workspaceId },
+    { meetingId, organizationId },
     {
       $set: {
         meetingTitle: meeting.title,

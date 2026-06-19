@@ -17,8 +17,8 @@ const { resolveChromeExecutablePath } = require("../utils/chromePath");
 const generatePdf = asyncHandler(async (req, res) => {
   const meetingId = req.params.meetingId;
   const [meeting, mom] = await Promise.all([
-    Meeting.findOne({ _id: meetingId, createdBy: req.user._id, workspaceId: req.workspace._id }),
-    Mom.findOne({ meetingId, createdBy: req.user._id, workspaceId: req.workspace._id }).populate("attachments"),
+    Meeting.findOne({ _id: meetingId, createdBy: req.user._id, organizationId: req.organization._id }),
+    Mom.findOne({ meetingId, createdBy: req.user._id, organizationId: req.organization._id }).populate("attachments"),
   ]);
 
   if (!meeting || !mom) {

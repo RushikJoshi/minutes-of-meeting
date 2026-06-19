@@ -24,9 +24,9 @@ async function requireAuth(req, res, next) {
 
       req.user = keyDoc.user;
       
-      // If the API key is restricted to a workspace, inject it into the request
-      if (keyDoc.workspace) {
-        req.apiKeyWorkspace = keyDoc.workspace;
+      // If the API key is restricted to a organization, inject it into the request
+      if (keyDoc.organization) {
+        req.apiKeyOrganization = keyDoc.organization;
       }
       return next();
     }

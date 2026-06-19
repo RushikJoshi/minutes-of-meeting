@@ -31,7 +31,7 @@ function getAuthUrl(state) {
 /**
  * Exchange code for tokens and save to DB
  */
-async function handleOAuthCallback({ code, userId, workspaceId, expectedEmail }) {
+async function handleOAuthCallback({ code, userId, organizationId, expectedEmail }) {
   const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   
@@ -47,10 +47,10 @@ async function handleOAuthCallback({ code, userId, workspaceId, expectedEmail })
   }
 
   await IntegrationToken.findOneAndUpdate(
-    { provider: "google", workspaceId, userId },
+    { provider: "google", organizationId, userId },
     {
       provider: "google",
-      workspaceId,
+      organizationId,
       userId,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
@@ -67,8 +67,8 @@ async function handleOAuthCallback({ code, userId, workspaceId, expectedEmail })
 /**
  * Get authenticated OAuth2 client for a specific user
  */
-async function getAuthClientForUser(userId, workspaceId) {
-  const doc = await IntegrationToken.findOne({ provider: "google", workspaceId, userId });
+async function getAuthClientForUser(userId, organizationId) {
+  const doc = await IntegrationToken.findOne({ provider: "google", organizationId, userId });
   if (!doc) return null;
 
   const oauth2Client = getOAuth2Client();
@@ -95,7 +95,7 @@ async function getAuthClientForUser(userId, workspaceId) {
  * Create Google Calendar event with Google Meet link
  */
 async function createGoogleMeetEvent({ userId, meeting }) {
-  const auth = await getAuthClientForUser(userId, meeting.workspaceId);
+  const auth = await getAuthClientForUser(userId, meeting.organizationId);
   if (!auth) return null;
 
   const calendar = google.calendar({ version: "v3", auth });
@@ -139,7 +139,7 @@ async function createGoogleMeetEvent({ userId, meeting }) {
  * Update Google Calendar event
  */
 async function updateGoogleMeetEvent({ userId, eventId, meeting }) {
-  const auth = await getAuthClientForUser(userId, meeting.workspaceId);
+  const auth = await getAuthClientForUser(userId, meeting.organizationId);
   if (!auth) return null;
 
   const calendar = google.calendar({ version: "v3", auth });
@@ -176,8 +176,8 @@ async function updateGoogleMeetEvent({ userId, eventId, meeting }) {
 /**
  * Delete Google Calendar event
  */
-async function deleteGoogleMeetEvent({ userId, workspaceId, eventId }) {
-  const auth = await getAuthClientForUser(userId, workspaceId);
+async function deleteGoogleMeetEvent({ userId, organizationId, eventId }) {
+  const auth = await getAuthClientForUser(userId, organizationId);
   if (!auth) return null;
 
   const calendar = google.calendar({ version: "v3", auth });

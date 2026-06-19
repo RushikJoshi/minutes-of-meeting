@@ -1,6 +1,6 @@
 const express = require("express");
 const { z } = require("zod");
-const { register, login, me } = require("../controllers/authController");
+const { register, login, me, acceptInvite } = require("../controllers/authController");
 const { validateBody } = require("../middlewares/validateMiddleware");
 const { requireAuth } = require("../middlewares/authMiddleware");
 
@@ -27,6 +27,17 @@ router.post(
     })
   ),
   login
+);
+
+router.post(
+  "/accept-invite",
+  validateBody(
+    z.object({
+      token: z.string().min(1),
+      password: z.string().min(8),
+    })
+  ),
+  acceptInvite
 );
 
 router.get("/me", requireAuth, me);

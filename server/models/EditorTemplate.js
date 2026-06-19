@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const editorTemplateSchema = new mongoose.Schema(
   {
-    workspaceId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
     },
     title: { type: String, default: "MOM Template", trim: true },
@@ -20,6 +20,6 @@ const editorTemplateSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-editorTemplateSchema.index({ workspaceId: 1 }, { unique: true });
+editorTemplateSchema.index({ organizationId: 1 }, { unique: true });
 
 module.exports = mongoose.model("EditorTemplate", editorTemplateSchema);

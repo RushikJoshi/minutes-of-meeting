@@ -93,7 +93,7 @@ export default function EmployeeDashboard() {
       <div className="w-full fade-up">
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
-            <h1 className="section-title">Employee Workspace</h1>
+            <h1 className="section-title">Employee Organization</h1>
 
           </div>
           <div className="hidden sm:block">
@@ -105,7 +105,7 @@ export default function EmployeeDashboard() {
 
         {loading ? (
           <div className="page-card p-5">
-            <p className="text-slate-600">Loading your workspace...</p>
+            <p className="text-slate-600">Loading your organization...</p>
           </div>
         ) : error ? (
           <div className="page-card border-red-200 p-5">

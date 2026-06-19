@@ -1,15 +1,15 @@
 const ActionItem = require("../models/ActionItem");
 
-async function syncActionItemsFromMom({ workspaceId, meetingId, mom }) {
+async function syncActionItemsFromMom({ organizationId, meetingId, mom }) {
   const momId = mom._id;
   const list = Array.isArray(mom.actionItems) ? mom.actionItems : [];
 
   // Replace-all strategy (simple + safe). For large scale, switch to diff sync.
-  await ActionItem.deleteMany({ workspaceId, meetingId, momId });
+  await ActionItem.deleteMany({ organizationId, meetingId, momId });
 
   const docs = list
     .map((it) => ({
-      workspaceId,
+      organizationId,
       meetingId,
       momId,
       sourceItemId: it?._id ? String(it._id) : "",

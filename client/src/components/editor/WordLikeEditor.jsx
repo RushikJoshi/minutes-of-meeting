@@ -437,7 +437,7 @@ const WordLikeEditor = forwardRef(({
               <Sparkles className="text-blue-600 animate-pulse" size={20} />
             </div>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mt-4">Crafting Your Workspace</h2>
+          <h2 className="text-xl font-bold text-slate-900 mt-4">Crafting Your Organization</h2>
           <p className="text-sm text-slate-500">Fine-tuning the editor tools for you...</p>
         </div>
       </div>

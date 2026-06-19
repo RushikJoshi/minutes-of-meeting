@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const contactGroupSchema = new mongoose.Schema(
   {
-    workspace: {
+    organization: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },

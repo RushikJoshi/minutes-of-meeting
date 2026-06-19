@@ -161,7 +161,7 @@ export default function TemplateBuilder() {
           <WordLikeEditor
             key={template?._id || "loading"}
             title="MOM Master Editor"
-            subtitle="Changes are automatically synced to your workspace."
+            subtitle="Changes are automatically synced to your organization."
             initialContent={initialEditorContent}
             loading={loading}
             saving={saving}

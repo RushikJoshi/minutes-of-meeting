@@ -19,10 +19,10 @@ const apiKeySchema = new mongoose.Schema(
       required: true,
       description: "The user who created this key"
     },
-    workspace: {
+    organization: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
-      description: "Optional: Limit the API key strictly to a specific workspace"
+      ref: "Organization",
+      description: "Optional: Limit the API key strictly to a specific organization"
     },
     lastUsedAt: {
       type: Date,

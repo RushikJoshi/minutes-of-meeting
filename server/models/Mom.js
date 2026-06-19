@@ -53,7 +53,7 @@ const approvalSchema = new mongoose.Schema({
 }, { _id: false });
 
 const momSchema = new mongoose.Schema({
-  workspaceId: { type: mongoose.Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
   meetingId: { type: mongoose.Schema.Types.ObjectId, ref: "Meeting", required: true, unique: true, index: true },
 
   // 1. Meeting Details

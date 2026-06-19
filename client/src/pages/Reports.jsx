@@ -42,7 +42,7 @@ export default function Reports() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Workspace Analytics</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Organization Analytics</h1>
           </div>
         </div>
 
@@ -122,7 +122,7 @@ export default function Reports() {
               <span className="text-sm font-semibold text-rose-800 uppercase tracking-widest">Items Overdue</span>
             </div>
             <p className="mt-4 text-xs text-rose-700/70 font-medium italic">
-              * Immediate attention required for these tasks to maintain workspace efficiency.
+              * Immediate attention required for these tasks to maintain organization efficiency.
             </p>
           </div>
         </div>

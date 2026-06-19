@@ -7,7 +7,7 @@ const listNotifications = asyncHandler(async (req, res) => {
 
   const filter = {
     userId: req.user._id,
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     ...(unread ? { readAt: { $exists: false } } : {}),
   };
   const items = await Notification.find(filter).sort({ createdAt: -1 }).limit(limit);
@@ -18,7 +18,7 @@ const markRead = asyncHandler(async (req, res) => {
   const n = await Notification.findOne({
     _id: req.params.id,
     userId: req.user._id,
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
   });
   if (!n) {
     res.status(404);

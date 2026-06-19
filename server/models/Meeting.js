@@ -32,9 +32,9 @@ const agendaItemSchema = new mongoose.Schema(
 
 const meetingSchema = new mongoose.Schema(
   {
-    workspaceId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },

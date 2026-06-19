@@ -1,6 +1,6 @@
 const express = require("express");
 const { requireAuth } = require("../middlewares/authMiddleware");
-const { requireWorkspace } = require("../middlewares/workspaceMiddleware");
+const { requireOrganization } = require("../middlewares/organizationMiddleware");
 const {
   microsoftStatus,
   microsoftConnect,
@@ -20,18 +20,18 @@ const {
 
 const router = express.Router();
 
-router.get("/integrations/microsoft/status", requireAuth, requireWorkspace, microsoftStatus);
-router.get("/integrations/microsoft/connect", requireAuth, requireWorkspace, microsoftConnect);
+router.get("/integrations/microsoft/status", requireAuth, requireOrganization, microsoftStatus);
+router.get("/integrations/microsoft/connect", requireAuth, requireOrganization, microsoftConnect);
 router.get("/integrations/microsoft/callback", microsoftCallback);
-router.post("/integrations/microsoft/disconnect", requireAuth, requireWorkspace, microsoftDisconnect);
-router.post("/integrations/microsoft/sync", requireAuth, requireWorkspace, microsoftSync);
-router.patch("/integrations/microsoft/preferences", requireAuth, requireWorkspace, microsoftPreferences);
+router.post("/integrations/microsoft/disconnect", requireAuth, requireOrganization, microsoftDisconnect);
+router.post("/integrations/microsoft/sync", requireAuth, requireOrganization, microsoftSync);
+router.patch("/integrations/microsoft/preferences", requireAuth, requireOrganization, microsoftPreferences);
 
-router.get("/integrations/google/status", requireAuth, requireWorkspace, googleStatus);
-router.get("/integrations/google/connect", requireAuth, requireWorkspace, googleConnect);
+router.get("/integrations/google/status", requireAuth, requireOrganization, googleStatus);
+router.get("/integrations/google/connect", requireAuth, requireOrganization, googleConnect);
 router.get("/integrations/google/callback", googleCallback);
-router.post("/integrations/google/disconnect", requireAuth, requireWorkspace, googleDisconnect);
-router.post("/integrations/google/sync", requireAuth, requireWorkspace, googleSync);
-router.patch("/integrations/google/preferences", requireAuth, requireWorkspace, googlePreferences);
+router.post("/integrations/google/disconnect", requireAuth, requireOrganization, googleDisconnect);
+router.post("/integrations/google/sync", requireAuth, requireOrganization, googleSync);
+router.patch("/integrations/google/preferences", requireAuth, requireOrganization, googlePreferences);
 
 module.exports = router;
