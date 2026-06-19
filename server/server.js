@@ -2,8 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-// Trigger restart to apply updated IP configuration from .env
-
 
 const connectDB = require("./utils/connectDB");
 const { notFound, errorHandler } = require("./utils/errorMiddleware");
@@ -35,17 +33,14 @@ const userRoutes = require("./routes/userRoutes");
 const attachmentRoutes = require("./routes/attachmentRoutes");
 const integrationRoutes = require("./routes/integrationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const workspaceRoutes = require("./routes/workspaceRoutes");
+const organizationRoutes = require("./routes/organizationRoutes");
 const actionItemRoutes = require("./routes/actionItemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const editorTemplateRoutes = require("./routes/editorTemplateRoutes");
 const apiKeyRoutes = require("./routes/apiKeyRoutes");
 const contactRoutes = require("./routes/contactRoutes");
-
-// ✅ IMPORTANT: Visitor API Route
-// app.use("/api/visitors", visitorRoutes);
-// app.use("/api/meta", metaRoutes);
 const reportRoutes = require("./routes/reportRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 /* ===========================
    TEST ROUTES
@@ -70,13 +65,14 @@ apiRouter.use(userRoutes);
 apiRouter.use(attachmentRoutes);
 apiRouter.use(integrationRoutes);
 apiRouter.use(notificationRoutes);
-apiRouter.use(workspaceRoutes);
+apiRouter.use(organizationRoutes);
 apiRouter.use(actionItemRoutes);
 apiRouter.use(aiRoutes);
 apiRouter.use(editorTemplateRoutes);
 apiRouter.use(reportRoutes);
 apiRouter.use(apiKeyRoutes);
 apiRouter.use("/contacts", contactRoutes);
+apiRouter.use(dashboardRoutes); // Added dashboardRoutes
 
 // Add meeting routes (if explicitly prefixed)
 apiRouter.use("/meetings", meetingRoutes);

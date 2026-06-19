@@ -20,44 +20,44 @@ const {
   testLifecycle,
 } = require("../controllers/meetingController");
 const { requireAuth } = require("../middlewares/authMiddleware");
-const { requireWorkspace } = require("../middlewares/workspaceMiddleware");
+const { requireOrganization } = require("../middlewares/organizationMiddleware");
 
 const router = express.Router();
 
 // ─── Meeting CRUD ─────────────────────────────────────────────────────────────
-router.post("/create-meeting", requireAuth, requireWorkspace, createMeeting);
-router.get("/meetings", requireAuth, requireWorkspace, getMeetings);
-router.get("/meeting/:id", requireAuth, requireWorkspace, getMeetingById);
-router.patch("/meeting/:id", requireAuth, requireWorkspace, updateMeeting);
-router.delete("/meeting/:id", requireAuth, requireWorkspace, deleteMeeting);
-router.post("/meeting/:id/cancel", requireAuth, requireWorkspace, cancelMeeting);
-router.post("/meeting/:id/start", requireAuth, requireWorkspace, startMeeting);
-router.post("/meeting/:id/end", requireAuth, requireWorkspace, endMeeting);
+router.post("/create-meeting", requireAuth, requireOrganization, createMeeting);
+router.get("/meetings", requireAuth, requireOrganization, getMeetings);
+router.get("/meeting/:id", requireAuth, requireOrganization, getMeetingById);
+router.patch("/meeting/:id", requireAuth, requireOrganization, updateMeeting);
+router.delete("/meeting/:id", requireAuth, requireOrganization, deleteMeeting);
+router.post("/meeting/:id/cancel", requireAuth, requireOrganization, cancelMeeting);
+router.post("/meeting/:id/start", requireAuth, requireOrganization, startMeeting);
+router.post("/meeting/:id/end", requireAuth, requireOrganization, endMeeting);
 
 // ─── Participant Actions ──────────────────────────────────────────────────────
-router.post("/meeting/:id/join", requireAuth, requireWorkspace, joinMeeting);
-router.post("/meeting/:id/leave", requireAuth, requireWorkspace, (req, res, next) => {
+router.post("/meeting/:id/join", requireAuth, requireOrganization, joinMeeting);
+router.post("/meeting/:id/leave", requireAuth, requireOrganization, (req, res, next) => {
   require("../controllers/meetingController").leaveMeeting(req, res, next);
 });
-router.put("/meeting/:id/agenda", requireAuth, requireWorkspace, updateMeetingAgenda);
+router.put("/meeting/:id/agenda", requireAuth, requireOrganization, updateMeetingAgenda);
 
 // ─── Invite Route ─────────────────────────────────────────────────────────────
 // POST /meeting/:id/invite — adds emails to participants and sends invite emails
-router.post("/meeting/:id/invite", requireAuth, requireWorkspace, inviteParticipants);
+router.post("/meeting/:id/invite", requireAuth, requireOrganization, inviteParticipants);
 
 // ─── PDF Download ─────────────────────────────────────────────────────────────
 router.get("/meeting/:id/test-lifecycle", testLifecycle);
 router.get("/meeting/:id/download-pdf", downloadPdf);
-router.get("/meeting/:id/export-pdf", requireAuth, requireWorkspace, downloadPdf);
+router.get("/meeting/:id/export-pdf", requireAuth, requireOrganization, downloadPdf);
 
 // Public invite landing and invite acceptance
 router.get("/join/:id", getPublicJoinDetails);
 router.post("/join/:id/accept", acceptPublicMeetingInvite);
 
 // ─── Reminders / Upcoming ─────────────────────────────────────────────────────
-router.get("/reminders", requireAuth, requireWorkspace, getTodayMeetings);
-router.get("/upcoming", requireAuth, requireWorkspace, getTodayMeetings);
-router.get("/meetings/upcoming", requireAuth, requireWorkspace, getTodayMeetings);
+router.get("/reminders", requireAuth, requireOrganization, getTodayMeetings);
+router.get("/upcoming", requireAuth, requireOrganization, getTodayMeetings);
+router.get("/meetings/upcoming", requireAuth, requireOrganization, getTodayMeetings);
 
 // GET /api/meetings
 router.get("/", async (req, res) => {

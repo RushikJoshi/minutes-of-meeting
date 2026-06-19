@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { useWorkspace } from "../hooks/useWorkspace";
+import { useOrganization } from "../hooks/useOrganization";
 import { useState, useEffect, useRef } from "react";
 import API from "../api/api";
 import brandedIcon from "../assets/logo_icon_final.png";
@@ -39,12 +39,12 @@ function SidebarNavItem({ to, children, icon, isCollapsed }) {
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
-  const { workspaces, activeWorkspaceId, setActiveWorkspaceId, createWorkspace } = useWorkspace();
-  const activeWs = workspaces.find((w) => w?.workspace?._id === activeWorkspaceId);
+  const { organizations, activeOrganizationId, setActiveOrganizationId, createOrganization } = useOrganization();
+  const activeWs = organizations.find((w) => w?.organization?._id === activeOrganizationId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
-  const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [showNewOrganizationModal, setShowNewOrganizationModal] = useState(false);
+  const [newOrganizationName, setNewOrganizationName] = useState("");
 
   // Notification State
   const [notifications, setNotifications] = useState([]);
@@ -254,19 +254,19 @@ export default function AppLayout() {
               ))}
             </nav>
 
-            {/* Workspace Selector */}
+            {/* Organization Selector */}
             {!sidebarCollapsed && (
               <div className="p-3 border-t border-slate-200">
                 <div className="mb-3">
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Workspace</label>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Organization</label>
                   <select
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                    value={activeWorkspaceId || ""}
-                    onChange={(e) => setActiveWorkspaceId(e.target.value)}
+                    value={activeOrganizationId || ""}
+                    onChange={(e) => setActiveOrganizationId(e.target.value)}
                   >
-                    {workspaces.map((w) => (
-                      <option key={w.workspace._id} value={w.workspace._id}>
-                        {w.workspace.name} ({w.role})
+                    {organizations.map((w) => (
+                      <option key={w.organization._id} value={w.organization._id}>
+                        {w.organization.name} ({w.role})
                       </option>
                     ))}
                   </select>
@@ -274,9 +274,9 @@ export default function AppLayout() {
 
                 <button
                   className="w-full mb-3 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-                  onClick={() => setShowNewWorkspaceModal(true)}
+                  onClick={() => setShowNewOrganizationModal(true)}
                 >
-                  + New Workspace
+                  + New Organization
                 </button>
               </div>
             )}
@@ -417,18 +417,18 @@ export default function AppLayout() {
         </main>
       </div>
 
-      {/* New Workspace Modal */}
-      {showNewWorkspaceModal && (
+      {/* New Organization Modal */}
+      {showNewOrganizationModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setShowNewWorkspaceModal(false)}
+            onClick={() => setShowNewOrganizationModal(false)}
           />
           <div className="relative w-full max-w-md page-card p-6 sm:p-8 animate-scale-up border border-slate-100">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-900">New Workspace</h3>
+              <h3 className="text-xl font-bold text-slate-900">New Organization</h3>
               <button
-                onClick={() => setShowNewWorkspaceModal(false)}
+                onClick={() => setShowNewOrganizationModal(false)}
                 className="p-2 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,18 +439,18 @@ export default function AppLayout() {
 
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">Workspace Name</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">Organization Name</label>
                 <input
                   autoFocus
                   className="input-field"
                   placeholder="e.g. Engineering Team"
-                  value={newWorkspaceName}
-                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  value={newOrganizationName}
+                  onChange={(e) => setNewOrganizationName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newWorkspaceName.trim()) {
-                      createWorkspace(newWorkspaceName.trim());
-                      setNewWorkspaceName("");
-                      setShowNewWorkspaceModal(false);
+                    if (e.key === 'Enter' && newOrganizationName.trim()) {
+                      createOrganization(newOrganizationName.trim());
+                      setNewOrganizationName("");
+                      setShowNewOrganizationModal(false);
                     }
                   }}
                 />
@@ -460,19 +460,19 @@ export default function AppLayout() {
                 <button
                   className="flex-1 btn-secondary"
                   onClick={() => {
-                    setShowNewWorkspaceModal(false);
-                    setNewWorkspaceName("");
+                    setShowNewOrganizationModal(false);
+                    setNewOrganizationName("");
                   }}
                 >
                   Cancel
                 </button>
                 <button
-                  disabled={!newWorkspaceName.trim()}
+                  disabled={!newOrganizationName.trim()}
                   className="flex-1 btn-primary"
                   onClick={async () => {
-                    await createWorkspace(newWorkspaceName.trim());
-                    setNewWorkspaceName("");
-                    setShowNewWorkspaceModal(false);
+                    await createOrganization(newOrganizationName.trim());
+                    setNewOrganizationName("");
+                    setShowNewOrganizationModal(false);
                   }}
                 >
                   Create

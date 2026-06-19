@@ -41,7 +41,7 @@ export default function Register() {
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">Create account</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Start managing meetings, MOMs, and action items with a cleaner workspace.
+            Start managing meetings, MOMs, and action items with a cleaner organization.
           </p>
         </div>
 

@@ -10,7 +10,7 @@ const {
 const microsoftStatus = asyncHandler(async (req, res) => {
   const doc = await IntegrationToken.findOne({
     provider: "microsoft",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
   res.json({
@@ -23,7 +23,7 @@ const microsoftStatus = asyncHandler(async (req, res) => {
 });
 
 const microsoftConnect = asyncHandler(async (req, res) => {
-  const { url } = await getConnectUrl({ userId: req.user._id, workspaceId: req.workspace._id, email: req.user.email });
+  const { url } = await getConnectUrl({ userId: req.user._id, organizationId: req.organization._id, email: req.user.email });
   res.json({ url });
 });
 
@@ -66,7 +66,7 @@ const microsoftCallback = asyncHandler(async (req, res) => {
 const microsoftDisconnect = asyncHandler(async (req, res) => {
   await IntegrationToken.deleteOne({
     provider: "microsoft",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
   res.json({ ok: true });
@@ -75,7 +75,7 @@ const microsoftDisconnect = asyncHandler(async (req, res) => {
 const microsoftSync = asyncHandler(async (req, res) => {
   const doc = await IntegrationToken.findOne({
     provider: "microsoft",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
 
@@ -95,7 +95,7 @@ const microsoftPreferences = asyncHandler(async (req, res) => {
   const { autoSync } = req.body;
   const doc = await IntegrationToken.findOne({
     provider: "microsoft",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
 

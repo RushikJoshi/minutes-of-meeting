@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const membershipSchema = new mongoose.Schema(
   {
-    workspaceId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workspace",
+      ref: "Organization",
       required: true,
       index: true,
     },
@@ -14,7 +14,7 @@ const membershipSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-membershipSchema.index({ workspaceId: 1, userId: 1 }, { unique: true });
+membershipSchema.index({ organizationId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Membership", membershipSchema);
 

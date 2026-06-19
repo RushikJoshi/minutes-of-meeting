@@ -11,7 +11,7 @@ function isEmailLike(value) {
 }
 
 async function createNotificationOnce({
-  workspaceId,
+  organizationId,
   userId,
   type,
   title,
@@ -23,7 +23,7 @@ async function createNotificationOnce({
   // best-effort de-dupe by (user,type,entityId,dueAt-day)
   const since = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const exists = await Notification.findOne({
-    workspaceId,
+    organizationId,
     userId,
     type,
     entityType,
@@ -32,7 +32,7 @@ async function createNotificationOnce({
   }).select("_id");
   if (exists) return null;
   return Notification.create({
-    workspaceId,
+    organizationId,
     userId,
     type,
     title,
@@ -79,7 +79,7 @@ async function processMeetingReminders() {
 
     for (const userId of notificationRecipients) {
       await createNotificationOnce({
-        workspaceId: m.workspaceId,
+        organizationId: m.organizationId,
         userId,
         type: "meetingReminder",
         title: "Meeting reminder",
@@ -128,7 +128,7 @@ async function processActionItemReminders() {
       if (!u?._id) continue;
 
       await createNotificationOnce({
-        workspaceId: mom.workspaceId,
+        organizationId: mom.organizationId,
         userId: u._id,
         type: "actionItemDue",
         title: "Action item due soon",

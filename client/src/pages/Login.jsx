@@ -26,9 +26,18 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await login(email, password);
+      // The login hook could return user data if modified, but let's assume it updates context.
+      // Wait, we need to get the user's role to redirect correctly.
+      const responseUser = await login(email, password);
       sessionStorage.setItem("justLoggedIn", "true");
-      navigate("/role-selection", { replace: true });
+      
+      // If login returns user, we can check here. If not, we rely on the context updating.
+      // Let's check responseUser.role if available.
+      if (responseUser && responseUser.role === "product_super_admin") {
+         navigate("/super-admin/dashboard", { replace: true });
+      } else {
+         navigate("/role-selection", { replace: true });
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || "Login failed. Please check credentials.";
       setError(msg);

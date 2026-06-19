@@ -6,7 +6,7 @@ const listActionItems = asyncHandler(async (req, res) => {
   const status = String(req.query.status || "all");
   const q = String(req.query.q || "").trim();
 
-  const filter = { workspaceId: req.workspace._id };
+  const filter = { organizationId: req.organization._id };
   if (scope === "my") {
     filter.assignedTo = String(req.user.email || "").toLowerCase();
   }
@@ -27,7 +27,7 @@ const listActionItems = asyncHandler(async (req, res) => {
 
 const updateActionItemStatus = asyncHandler(async (req, res) => {
   const status = req.body?.status === "completed" || req.body?.status === "done" ? "completed" : "pending";
-  const item = await ActionItem.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const item = await ActionItem.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!item) {
     res.status(404);
     throw new Error("Action item not found");

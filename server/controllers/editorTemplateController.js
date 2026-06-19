@@ -3,7 +3,7 @@ const Attachment = require("../models/Attachment");
 const asyncHandler = require("../utils/asyncHandler");
 
 async function ensureTemplate(req) {
-  let template = await EditorTemplate.findOne({ workspaceId: req.workspace._id }).populate("attachments");
+  let template = await EditorTemplate.findOne({ organizationId: req.organization._id }).populate("attachments");
   const defaultHtml = `
     <h1 style="text-align: center;"><u>MEETING TITLE</u></h1>
     <br/>
@@ -37,7 +37,7 @@ async function ensureTemplate(req) {
 
   if (!template) {
     template = await EditorTemplate.create({
-      workspaceId: req.workspace._id,
+      organizationId: req.organization._id,
       updatedBy: req.user._id,
       title: "MOM Template",
       contentHtml: defaultHtml,
@@ -73,7 +73,7 @@ const upsertEditorTemplate = asyncHandler(async (req, res) => {
     const count = await Attachment.countDocuments({
       _id: { $in: attachmentIds },
       createdBy: req.user._id,
-      workspaceId: req.workspace._id,
+      organizationId: req.organization._id,
       entityType: "editorTemplate",
       entityId: existing._id,
     });
@@ -85,7 +85,7 @@ const upsertEditorTemplate = asyncHandler(async (req, res) => {
   }
 
   const template = await EditorTemplate.findOneAndUpdate(
-    { workspaceId: req.workspace._id },
+    { organizationId: req.organization._id },
     {
       $set: {
         title: payload.title || existing.title || "MOM Template",

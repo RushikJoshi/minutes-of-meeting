@@ -16,7 +16,7 @@ const createShareLink = asyncHandler(async (req, res) => {
   const meeting = await Meeting.findOne({
     _id: meetingId,
     createdBy: req.user._id,
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
   });
   if (!meeting) {
     res.status(404);
@@ -25,7 +25,7 @@ const createShareLink = asyncHandler(async (req, res) => {
 
   const token = generateToken(12);
   const share = await Share.create({
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     meetingId,
     token,
     accessType: accessType === "edit" ? "edit" : "view",
@@ -53,7 +53,7 @@ const openSharedMom = asyncHandler(async (req, res) => {
 
   const [meeting, mom] = await Promise.all([
     Meeting.findById(share.meetingId),
-    Mom.findOne({ meetingId: share.meetingId, workspaceId: share.workspaceId }).populate("attachments"),
+    Mom.findOne({ meetingId: share.meetingId, organizationId: share.organizationId }).populate("attachments"),
   ]);
 
   res.json({ share, meeting, mom });
@@ -97,14 +97,14 @@ const updateSharedMinutes = asyncHandler(async (req, res) => {
   if (Array.isArray(actionItems)) update.actionItems = normalizedItems;
 
   const mom = await Mom.findOneAndUpdate(
-    { meetingId: share.meetingId, workspaceId: share.workspaceId },
+    { meetingId: share.meetingId, organizationId: share.organizationId },
     { $set: update, $inc: { version: 1 } },
     { new: true }
   ).populate("attachments");
 
   if (mom) {
     await syncActionItemsFromMom({
-      workspaceId: share.workspaceId,
+      organizationId: share.organizationId,
       meetingId: share.meetingId,
       mom,
     });

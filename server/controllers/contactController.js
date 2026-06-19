@@ -2,13 +2,13 @@ const Contact = require("../models/Contact");
 const ContactGroup = require("../models/ContactGroup");
 const asyncHandler = require("../utils/asyncHandler");
 
-// @desc    Get all contacts for a workspace (with optional search)
+// @desc    Get all contacts for a organization (with optional search)
 // @route   GET /api/contacts
 const getContacts = asyncHandler(async (req, res) => {
   const { q } = req.query;
-  const workspaceId = req.workspace._id;
+  const organizationId = req.organization._id;
 
-  let query = { workspace: workspaceId };
+  let query = { organization: organizationId };
 
   if (q) {
     const searchRegex = new RegExp(q, "i");
@@ -28,18 +28,18 @@ const getContacts = asyncHandler(async (req, res) => {
 // @route   POST /api/contacts
 const createContact = asyncHandler(async (req, res) => {
   const { name, email, phone, designation, department, company, notes } = req.body;
-  const workspaceId = req.workspace._id;
+  const organizationId = req.organization._id;
 
-  // Check if email already exists in workspace
-  const existingContact = await Contact.findOne({ workspace: workspaceId, email: email.toLowerCase() });
+  // Check if email already exists in organization
+  const existingContact = await Contact.findOne({ organization: organizationId, email: email.toLowerCase() });
   if (existingContact) {
-    const err = new Error("Contact with this email already exists in the workspace");
+    const err = new Error("Contact with this email already exists in the organization");
     err.statusCode = 400;
     throw err;
   }
 
   const contact = await Contact.create({
-    workspace: workspaceId,
+    organization: organizationId,
     createdBy: req.user._id,
     name,
     email: email.toLowerCase(),
@@ -58,9 +58,9 @@ const createContact = asyncHandler(async (req, res) => {
 // @route   PUT /api/contacts/:id
 const updateContact = asyncHandler(async (req, res) => {
   const { name, email, phone, designation, department, company, notes } = req.body;
-  const workspaceId = req.workspace._id;
+  const organizationId = req.organization._id;
 
-  let contact = await Contact.findOne({ _id: req.params.id, workspace: workspaceId });
+  let contact = await Contact.findOne({ _id: req.params.id, organization: organizationId });
   if (!contact) {
     const err = new Error("Contact not found");
     err.statusCode = 404;
@@ -68,7 +68,7 @@ const updateContact = asyncHandler(async (req, res) => {
   }
 
   if (email && email.toLowerCase() !== contact.email) {
-    const existingContact = await Contact.findOne({ workspace: workspaceId, email: email.toLowerCase() });
+    const existingContact = await Contact.findOne({ organization: organizationId, email: email.toLowerCase() });
     if (existingContact) {
       const err = new Error("Another contact with this email already exists");
       err.statusCode = 400;
@@ -91,8 +91,8 @@ const updateContact = asyncHandler(async (req, res) => {
 // @desc    Delete a contact
 // @route   DELETE /api/contacts/:id
 const deleteContact = asyncHandler(async (req, res) => {
-  const workspaceId = req.workspace._id;
-  const contact = await Contact.findOne({ _id: req.params.id, workspace: workspaceId });
+  const organizationId = req.organization._id;
+  const contact = await Contact.findOne({ _id: req.params.id, organization: organizationId });
 
   if (!contact) {
     const err = new Error("Contact not found");
@@ -100,9 +100,9 @@ const deleteContact = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  // Remove contact from all groups in this workspace
+  // Remove contact from all groups in this organization
   await ContactGroup.updateMany(
-    { workspace: workspaceId },
+    { organization: organizationId },
     { $pull: { members: contact._id } }
   );
 
@@ -117,7 +117,7 @@ const deleteContact = asyncHandler(async (req, res) => {
 // @desc    Get all contact groups
 // @route   GET /api/contacts/groups
 const getContactGroups = asyncHandler(async (req, res) => {
-  const groups = await ContactGroup.find({ workspace: req.workspace._id })
+  const groups = await ContactGroup.find({ organization: req.organization._id })
     .populate("members")
     .sort({ groupName: 1 });
   res.json(groups);
@@ -127,10 +127,10 @@ const getContactGroups = asyncHandler(async (req, res) => {
 // @route   POST /api/contacts/groups
 const createContactGroup = asyncHandler(async (req, res) => {
   const { groupName, description, members } = req.body;
-  const workspaceId = req.workspace._id;
+  const organizationId = req.organization._id;
 
   const group = await ContactGroup.create({
-    workspace: workspaceId,
+    organization: organizationId,
     createdBy: req.user._id,
     groupName,
     description,
@@ -145,9 +145,9 @@ const createContactGroup = asyncHandler(async (req, res) => {
 // @route   PUT /api/contacts/groups/:id
 const updateContactGroup = asyncHandler(async (req, res) => {
   const { groupName, description, members } = req.body;
-  const workspaceId = req.workspace._id;
+  const organizationId = req.organization._id;
 
-  let group = await ContactGroup.findOne({ _id: req.params.id, workspace: workspaceId });
+  let group = await ContactGroup.findOne({ _id: req.params.id, organization: organizationId });
   if (!group) {
     const err = new Error("Group not found");
     err.statusCode = 404;
@@ -166,7 +166,7 @@ const updateContactGroup = asyncHandler(async (req, res) => {
 // @desc    Delete a contact group
 // @route   DELETE /api/contacts/groups/:id
 const deleteContactGroup = asyncHandler(async (req, res) => {
-  const group = await ContactGroup.findOne({ _id: req.params.id, workspace: req.workspace._id });
+  const group = await ContactGroup.findOne({ _id: req.params.id, organization: req.organization._id });
   if (!group) {
     const err = new Error("Group not found");
     err.statusCode = 404;

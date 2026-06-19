@@ -79,9 +79,9 @@ function createCcaWithCache(serializedCache) {
   return cca;
 }
 
-function signState({ userId, workspaceId, email }) {
+function signState({ userId, organizationId, email }) {
   return jwt.sign(
-    { userId: String(userId), workspaceId: String(workspaceId || ""), email: String(email || "") },
+    { userId: String(userId), organizationId: String(organizationId || ""), email: String(email || "") },
     process.env.JWT_SECRET,
     { expiresIn: "10m" }
   );
@@ -89,17 +89,17 @@ function signState({ userId, workspaceId, email }) {
 
 function verifyState(state) {
   const payload = jwt.verify(state, process.env.JWT_SECRET);
-  if (!payload?.userId || !payload?.workspaceId) throw new Error("Invalid state");
-  return { userId: payload.userId, workspaceId: payload.workspaceId };
+  if (!payload?.userId || !payload?.organizationId) throw new Error("Invalid state");
+  return { userId: payload.userId, organizationId: payload.organizationId };
 }
 
-async function getConnectUrl({ userId, workspaceId, email }) {
+async function getConnectUrl({ userId, organizationId, email }) {
   const cca = createCcaWithCache();
-  const state = signState({ userId, workspaceId, email });
+  const state = signState({ userId, organizationId, email });
   const runtime = getMicrosoftRuntimeValues();
   logMicrosoftOAuth("Generating authorization URL", {
     userId: String(userId),
-    workspaceId: String(workspaceId),
+    organizationId: String(organizationId),
     email,
     stateLength: state.length,
   });
@@ -122,7 +122,7 @@ async function handleOAuthCallback({ code, state }) {
     stateReceived: Boolean(state),
     stateLength: state ? String(state).length : 0,
   });
-  const { userId, workspaceId } = verifyState(state);
+  const { userId, organizationId } = verifyState(state);
   const cca = createCcaWithCache();
   const runtime = getMicrosoftRuntimeValues();
   let token;
@@ -134,7 +134,7 @@ async function handleOAuthCallback({ code, state }) {
     });
     logMicrosoftOAuth("Token exchange succeeded", {
       userId,
-      workspaceId,
+      organizationId,
       accountUsername: token?.account?.username || "",
       accountTenantId: token?.account?.tenantId || "",
       homeAccountId: token?.account?.homeAccountId || "",
@@ -155,10 +155,10 @@ async function handleOAuthCallback({ code, state }) {
   const account = token?.account;
 
   await IntegrationToken.findOneAndUpdate(
-    { provider: "microsoft", workspaceId, userId },
+    { provider: "microsoft", organizationId, userId },
     {
       provider: "microsoft",
-      workspaceId,
+      organizationId,
       userId,
       msalCache: cache,
       homeAccountId: account?.homeAccountId || "",
@@ -169,11 +169,11 @@ async function handleOAuthCallback({ code, state }) {
     { upsert: true, new: true }
   );
 
-  return { userId, workspaceId };
+  return { userId, organizationId };
 }
 
-async function getAccessTokenForUser({ userId, workspaceId }) {
-  const doc = await IntegrationToken.findOne({ provider: "microsoft", workspaceId, userId });
+async function getAccessTokenForUser({ userId, organizationId }) {
+  const doc = await IntegrationToken.findOne({ provider: "microsoft", organizationId, userId });
   if (!doc) return null;
 
   const cca = createCcaWithCache(doc.msalCache);
@@ -243,7 +243,7 @@ function meetingToGraphEvent(meeting) {
 }
 
 async function createOutlookEvent({ userId, meeting }) {
-  const accessToken = await getAccessTokenForUser({ userId, workspaceId: meeting.workspaceId });
+  const accessToken = await getAccessTokenForUser({ userId, organizationId: meeting.organizationId });
   if (!accessToken) return null;
   const event = meetingToGraphEvent(meeting);
   if (!event) return null;
@@ -260,7 +260,7 @@ async function createOutlookEvent({ userId, meeting }) {
 }
 
 async function updateOutlookEvent({ userId, outlookEventId, meeting }) {
-  const accessToken = await getAccessTokenForUser({ userId, workspaceId: meeting.workspaceId });
+  const accessToken = await getAccessTokenForUser({ userId, organizationId: meeting.organizationId });
   if (!accessToken) return null;
   const event = meetingToGraphEvent(meeting);
   if (!event) return null;
@@ -273,8 +273,8 @@ async function updateOutlookEvent({ userId, outlookEventId, meeting }) {
   return updated;
 }
 
-async function deleteOutlookEvent({ userId, workspaceId, outlookEventId }) {
-  const accessToken = await getAccessTokenForUser({ userId, workspaceId });
+async function deleteOutlookEvent({ userId, organizationId, outlookEventId }) {
+  const accessToken = await getAccessTokenForUser({ userId, organizationId });
   if (!accessToken) return null;
   const res = await fetch(`https://graph.microsoft.com/v1.0/me/events/${outlookEventId}`, {
     method: "DELETE",

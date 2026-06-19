@@ -69,11 +69,13 @@ export default function AuthProvider({ children }) {
         const res = await API.post("/auth/login", { email, password });
         setToken(res.data?.token || "");
         setUser(res.data?.user || null);
+        return res.data?.user;
       },
       async register(name, email, password) {
         const res = await API.post("/auth/register", { name, email, password });
         setToken(res.data?.token || "");
         setUser(res.data?.user || null);
+        return res.data?.user;
       },
       logout() {
         setUser(null);

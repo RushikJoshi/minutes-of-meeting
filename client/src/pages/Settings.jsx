@@ -3,7 +3,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import API from "../api/api";
 import IntegrationCard from "../components/IntegrationCard";
-import { useWorkspace } from "../hooks/useWorkspace";
+import { useOrganization } from "../hooks/useOrganization";
 
 export default function Settings() {
   const [ms, setMs] = useState({ connected: false });
@@ -17,8 +17,8 @@ export default function Settings() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { workspaces, activeWorkspaceId } = useWorkspace();
-  const activeWs = workspaces.find((w) => w?.workspace?._id === activeWorkspaceId);
+  const { organizations, activeOrganizationId } = useOrganization();
+  const activeWs = organizations.find((w) => w?.organization?._id === activeOrganizationId);
   const isAdmin = activeWs?.role === "admin" || activeWs?.role === "owner";
 
   const refresh = async () => {

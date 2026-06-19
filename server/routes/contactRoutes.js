@@ -1,6 +1,6 @@
 const express = require("express");
 const { requireAuth } = require("../middlewares/authMiddleware");
-const { requireWorkspace } = require("../middlewares/workspaceMiddleware");
+const { requireOrganization } = require("../middlewares/organizationMiddleware");
 const {
   getContacts,
   createContact,
@@ -15,7 +15,7 @@ const {
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireWorkspace);
+router.use(requireOrganization);
 
 // Group Routes
 router.get("/groups", getContactGroups);

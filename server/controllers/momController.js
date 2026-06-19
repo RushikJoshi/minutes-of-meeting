@@ -21,7 +21,7 @@ const createMom = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("meetingId is required");
   }
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: meetingId, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -29,7 +29,7 @@ const createMom = asyncHandler(async (req, res) => {
   const payload = req.body || {};
   try {
     const mom = await Mom.create({
-      workspaceId: req.workspace._id,
+      organizationId: req.organization._id,
       meetingId,
       createdBy: req.user._id,
       docStatus: "draft",
@@ -63,7 +63,7 @@ const createMom = asyncHandler(async (req, res) => {
       decisions: payload.decisions || "",
       attendees: Array.isArray(payload.attendees) ? payload.attendees : [],
     });
-    await syncActionItemsFromMom({ workspaceId: req.workspace._id, meetingId, mom });
+    await syncActionItemsFromMom({ organizationId: req.organization._id, meetingId, mom });
     res.status(201).json(mom);
   } catch (err) {
     if (err?.code === 11000) {
@@ -76,29 +76,29 @@ const createMom = asyncHandler(async (req, res) => {
 
 const getMomByMeetingId = asyncHandler(async (req, res) => {
   const meetingId = req.params.meetingId;
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: meetingId, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
   }
-  const mom = await Mom.findOne({ meetingId, workspaceId: req.workspace._id }).populate("attachments");
+  const mom = await Mom.findOne({ meetingId, organizationId: req.organization._id }).populate("attachments");
   res.json(mom);
 });
 
 const getMinutesDoc = asyncHandler(async (req, res) => {
   const meetingId = req.params.meetingId;
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: meetingId, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
   }
-  const mom = await Mom.findOne({ meetingId, workspaceId: req.workspace._id }).populate("attachments");
+  const mom = await Mom.findOne({ meetingId, organizationId: req.organization._id }).populate("attachments");
   res.json({ meeting, mom });
 });
 
 const upsertMinutesDoc = asyncHandler(async (req, res) => {
   const { meetingId } = req.params;
-  const meeting = await Meeting.findOne({ _id: meetingId, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: meetingId, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -154,12 +154,12 @@ const upsertMinutesDoc = asyncHandler(async (req, res) => {
   if (nextStatus === "published") $set.publishedAt = new Date();
 
   const mom = await Mom.findOneAndUpdate(
-    { meetingId, workspaceId: req.workspace._id },
+    { meetingId, organizationId: req.organization._id },
     {
       $set,
       $inc: { version: 1 },
       $setOnInsert: {
-        workspaceId: req.workspace._id,
+        organizationId: req.organization._id,
         meetingId,
         createdBy: req.user._id,
       },
@@ -167,7 +167,7 @@ const upsertMinutesDoc = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   ).populate("attachments");
 
-  await syncActionItemsFromMom({ workspaceId: req.workspace._id, meetingId, mom });
+  await syncActionItemsFromMom({ organizationId: req.organization._id, meetingId, mom });
   
   meeting.momContent = mom.contentHtml || "";
   await meeting.save();

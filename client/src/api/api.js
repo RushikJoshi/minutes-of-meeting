@@ -14,7 +14,7 @@ const API = axios.create({
   baseURL: getBaseURL() + "/api/v1",
 });
 
-const WS_KEY = "mom.workspaceId";
+const WS_KEY = "mom.organizationId";
 
 export function setAuthToken(token) {
   if (token) {
@@ -24,9 +24,9 @@ export function setAuthToken(token) {
   }
 }
 
-export function setWorkspaceId(workspaceId) {
-  if (workspaceId) {
-    localStorage.setItem(WS_KEY, String(workspaceId));
+export function setOrganizationId(organizationId) {
+  if (organizationId) {
+    localStorage.setItem(WS_KEY, String(organizationId));
   } else {
     localStorage.removeItem(WS_KEY);
   }
@@ -36,19 +36,19 @@ API.interceptors.request.use((config) => {
   const wsId = localStorage.getItem(WS_KEY);
   if (wsId) {
     // eslint-disable-next-line no-param-reassign
-    config.headers["x-workspace-id"] = wsId;
+    config.headers["x-organization-id"] = wsId;
   }
   return config;
 });
 
-// If the stored workspace id is stale (user has no access), clear it so the
+// If the stored organization id is stale (user has no access), clear it so the
 // backend can fall back to the user's first membership on subsequent requests.
 API.interceptors.response.use(
   (res) => res,
   (error) => {
     const status = error?.response?.status;
     const message = String(error?.response?.data?.message || "");
-    if (status === 403 && message.toLowerCase().includes("workspace")) {
+    if (status === 403 && message.toLowerCase().includes("organization")) {
       localStorage.removeItem(WS_KEY);
     }
     return Promise.reject(error);

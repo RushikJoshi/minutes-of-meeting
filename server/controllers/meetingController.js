@@ -335,7 +335,7 @@ async function generateMOM(meeting) {
   console.log(`[Lifecycle] Generating MOM for ${meeting._id}`);
   // Use the auto-generator if possible, or a fallback
   try {
-    const res = await generateMOMReport(meeting._id, meeting.workspaceId, meeting.createdBy);
+    const res = await generateMOMReport(meeting._id, meeting.organizationId, meeting.createdBy);
     if (res?.mom) {
       meeting.mom = {
         summary: res.mom.summary || res.mom.objective || "Meeting concluded.",
@@ -381,7 +381,7 @@ async function generatePDF(meeting) {
 
     const momDoc = await Mom.findOne({
       meetingId: meeting._id,
-      workspaceId: meeting.workspaceId,
+      organizationId: meeting.organizationId,
     }).populate("attachments");
 
     const momPayload = momDoc ? momDoc.toObject() : {};
@@ -488,7 +488,7 @@ const createMeeting = asyncHandler(async (req, res) => {
             startTime,
             endTime,
             participants: normalizedParticipants,
-            workspaceId: req.workspace._id,
+            organizationId: req.organization._id,
             timezone,
           },
         });
@@ -526,7 +526,7 @@ const createMeeting = asyncHandler(async (req, res) => {
             endTime,
             timezone,
             participants: normalizedParticipants,
-            workspaceId: req.workspace._id,
+            organizationId: req.organization._id,
           },
         });
         if (teamsRes?.meetLink) {
@@ -542,7 +542,7 @@ const createMeeting = asyncHandler(async (req, res) => {
   meetLink = ensureMeetingLink({ meetingType: type || "online", platform, link: meetLink });
 
   const meeting = await Meeting.create({
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     title,
     agenda,
     description,
@@ -608,7 +608,7 @@ const createMeeting = asyncHandler(async (req, res) => {
 
 const getMeetings = asyncHandler(async (req, res) => {
   const { search, date, status, priority } = req.query;
-  const query = { workspaceId: req.workspace._id };
+  const query = { organizationId: req.organization._id };
   if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
@@ -635,7 +635,7 @@ const getMeetings = asyncHandler(async (req, res) => {
 });
 
 const getMeetingById = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -648,7 +648,7 @@ const getMeetingById = asyncHandler(async (req, res) => {
 });
 
 const updateMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -699,7 +699,7 @@ const updateMeeting = asyncHandler(async (req, res) => {
 });
 
 const cancelMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -716,16 +716,16 @@ const cancelMeeting = asyncHandler(async (req, res) => {
 });
 
 const deleteMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
   }
 
   await Promise.all([
-    Mom.deleteOne({ meetingId: meeting._id, workspaceId: req.workspace._id }),
-    ActionItem.deleteMany({ meetingId: meeting._id, workspaceId: req.workspace._id }),
-    Notification.deleteMany({ entityType: "meeting", entityId: meeting._id, workspaceId: req.workspace._id }),
+    Mom.deleteOne({ meetingId: meeting._id, organizationId: req.organization._id }),
+    ActionItem.deleteMany({ meetingId: meeting._id, organizationId: req.organization._id }),
+    Notification.deleteMany({ entityType: "meeting", entityId: meeting._id, organizationId: req.organization._id }),
     meeting.deleteOne(),
   ]);
 
@@ -755,7 +755,7 @@ const inviteParticipants = asyncHandler(async (req, res) => {
     throw new Error("emails array is required");
   }
 
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -812,7 +812,7 @@ const getTodayMeetings = asyncHandler(async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const meetings = await Meeting.find({
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     date: { $gte: today, $lt: new Date(today.getTime() + 86400000) },
   });
   res.json(
@@ -824,7 +824,7 @@ const getTodayMeetings = asyncHandler(async (req, res) => {
 });
 
 const joinMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -866,7 +866,7 @@ const joinMeeting = asyncHandler(async (req, res) => {
 });
 
 const leaveMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -886,7 +886,7 @@ const leaveMeeting = asyncHandler(async (req, res) => {
 });
 
 const updateMeetingAgenda = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -970,7 +970,7 @@ const acceptPublicMeetingInvite = asyncHandler(async (req, res) => {
 });
 
 const startMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -996,7 +996,7 @@ const startMeeting = asyncHandler(async (req, res) => {
 });
 
 const endMeeting = asyncHandler(async (req, res) => {
-  const meeting = await Meeting.findOne({ _id: req.params.id, workspaceId: req.workspace._id });
+  const meeting = await Meeting.findOne({ _id: req.params.id, organizationId: req.organization._id });
   if (!meeting) {
     res.status(404);
     throw new Error("Meeting not found");
@@ -1048,7 +1048,7 @@ const downloadPdf = asyncHandler(async (req, res) => {
 });
 
 const getAutoMomReport = asyncHandler(async (req, res) => {
-  const reportData = await generateMOMReport(req.params.id, req.workspace._id, req.user._id);
+  const reportData = await generateMOMReport(req.params.id, req.organization._id, req.user._id);
   res.json(reportData);
 });
 

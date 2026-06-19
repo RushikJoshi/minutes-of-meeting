@@ -10,6 +10,7 @@ import MeetingDetails from "./pages/MeetingDetails";
 import ShareView from "./pages/ShareView";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AcceptInvite from "./pages/AcceptInvite";
 import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
@@ -23,6 +24,13 @@ import RoleSelection from "./pages/RoleSelection";
 import DocumentVerification from "./pages/DocumentVerification";
 import AdminDashboard from "./pages/AdminDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import SuperAdminLayout from "./pages/SuperAdmin/SuperAdminLayout";
+import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
+import SuperAdminOrganizations from "./pages/SuperAdmin/Organizations";
+import SuperAdminOrganizationForm from "./pages/SuperAdmin/OrganizationForm";
+import SuperAdminSettings from "./pages/SuperAdmin/Settings";
+import SuperAdminOrganizationAdmins from "./pages/SuperAdmin/OrganizationAdmins";
+import SuperAdminAuditLogs from "./pages/SuperAdmin/AuditLogs";
 // import VisitorDashboard from "./pages/VisitorDashboard";
 // import VisitorFormPublic from "./pages/VisitorFormPublic";
 // import ReceptionistDashboard from "./pages/ReceptionistDashboard";
@@ -31,17 +39,17 @@ import Profile from "./pages/Profile";
 import { useEffect, useState } from "react";
 import API from "./api/api";
 import { useAuth } from "./hooks/useAuth";
-import { useWorkspace } from "./hooks/useWorkspace";
+import { useOrganization } from "./hooks/useOrganization";
 import { Toaster } from "react-hot-toast";
 
 function App() {
   const { isAuthenticated } = useAuth();
-  const { activeWorkspaceId } = useWorkspace();
+  const { activeOrganizationId } = useOrganization();
   const [currentMeeting, setCurrentMeeting] = useState(null);
   const [countdownMinutes, setCountdownMinutes] = useState(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !activeWorkspaceId) return;
+    if (!isAuthenticated || !activeOrganizationId) return;
 
     const checkUpcomingMeetings = async () => {
       try {
@@ -119,7 +127,7 @@ function App() {
     const interval = setInterval(checkUpcomingMeetings, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, activeWorkspaceId, currentMeeting]);
+  }, [isAuthenticated, activeOrganizationId, currentMeeting]);
 
   return (
     <BrowserRouter>
@@ -134,6 +142,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/role-selection" element={<RoleSelection />} />
         <Route path="/document-verification" element={<DocumentVerification />} />
         <Route path="/share/:token" element={<ShareView />} />
@@ -162,6 +171,19 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/action-items" element={<ActionItems />} />
             <Route path="/template-builder" element={<TemplateBuilder />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute requireRole="product_super_admin" />}>
+          <Route path="/super-admin" element={<SuperAdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="organizations" element={<SuperAdminOrganizations />} />
+            <Route path="organizations/new" element={<SuperAdminOrganizationForm />} />
+            <Route path="organizations/:id" element={<SuperAdminOrganizationForm />} />
+            <Route path="organization-admins" element={<SuperAdminOrganizationAdmins />} />
+            <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
+            <Route path="settings" element={<SuperAdminSettings />} />
           </Route>
         </Route>
       </Routes>

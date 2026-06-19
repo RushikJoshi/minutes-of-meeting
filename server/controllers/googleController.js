@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const googleStatus = asyncHandler(async (req, res) => {
   const doc = await IntegrationToken.findOne({
     provider: "google",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
   res.json({
@@ -20,7 +20,7 @@ const googleStatus = asyncHandler(async (req, res) => {
 
 const googleConnect = asyncHandler(async (req, res) => {
   const state = jwt.sign(
-    { userId: String(req.user._id), workspaceId: String(req.workspace._id), email: String(req.user.email || "") },
+    { userId: String(req.user._id), organizationId: String(req.organization._id), email: String(req.user.email || "") },
     process.env.JWT_SECRET,
     { expiresIn: "10m" }
   );
@@ -39,7 +39,7 @@ const googleCallback = asyncHandler(async (req, res) => {
   await googleCalendarService.handleOAuthCallback({
     code,
     userId: decoded.userId,
-    workspaceId: decoded.workspaceId,
+    organizationId: decoded.organizationId,
     expectedEmail: decoded.email,
   });
 
@@ -50,7 +50,7 @@ const googleCallback = asyncHandler(async (req, res) => {
 const googleDisconnect = asyncHandler(async (req, res) => {
   await IntegrationToken.deleteOne({
     provider: "google",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
   res.json({ ok: true });
@@ -59,7 +59,7 @@ const googleDisconnect = asyncHandler(async (req, res) => {
 const googleSync = asyncHandler(async (req, res) => {
   const doc = await IntegrationToken.findOne({
     provider: "google",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
 
@@ -79,7 +79,7 @@ const googlePreferences = asyncHandler(async (req, res) => {
   const { autoSync } = req.body;
   const doc = await IntegrationToken.findOne({
     provider: "google",
-    workspaceId: req.workspace._id,
+    organizationId: req.organization._id,
     userId: req.user._id,
   });
 

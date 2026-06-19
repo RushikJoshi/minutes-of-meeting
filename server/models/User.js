@@ -15,9 +15,24 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     passwordHash: {
-      type: String,
-      required: true,
+      type: String, // Made optional for invite flow
     },
+    inviteToken: {
+      type: String,
+    },
+    inviteTokenExpiresAt: {
+      type: Date,
+    },
+    role: {
+      type: String,
+      enum: ["product_super_admin", "organization_admin", "employee"],
+      default: "employee"
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      index: true
+    }
   },
   { timestamps: true }
 );
